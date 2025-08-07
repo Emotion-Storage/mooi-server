@@ -11,3 +11,8 @@ spring:
         static: ${AWS_REGION}
       s3:
         bucket: ${AWS_BUCKET_NAME}
+
+  security:
+    oauth2:
+      google:
+        client-id: ${GOOGLE_CLIENT_ID}
