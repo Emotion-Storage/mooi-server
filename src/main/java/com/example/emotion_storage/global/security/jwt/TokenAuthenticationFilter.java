@@ -29,7 +29,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     // 화이트리스트
     private final List<String> whitelist = List.of(
-            "/auth",
+            "/auth/reissue",
             "/docs",
             "/health",
             "/h2-console",
@@ -52,6 +52,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         if (token == null || token.isBlank()) {
+            SecurityContextHolder.clearContext();
             filterChain.doFilter(request, response);
             return;
         }
@@ -71,6 +72,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(principal, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         } else {
+            SecurityContextHolder.clearContext();
             ErrorCode errorCode = (status == TokenStatus.EXPIRED)
                     ? ErrorCode.ACCESS_TOKEN_EXPIRED
                     : ErrorCode.ACCESS_TOKEN_INVALID;
