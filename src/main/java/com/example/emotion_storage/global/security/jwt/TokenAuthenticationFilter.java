@@ -29,7 +29,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     // 화이트리스트
     private final List<String> whitelist = List.of(
-            "/auth/reissue",
+            "/auth",
+            "/api/v1/users/signup",
+            "/api/v1/users/login",
             "/docs",
             "/health",
             "/h2-console",

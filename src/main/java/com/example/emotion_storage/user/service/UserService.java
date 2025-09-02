@@ -69,6 +69,7 @@ public class UserService {
                 .socialType(SocialType.GOOGLE)
                 .profileImageUrl(claims.profileImgUrl())
                 .nickname(request.nickname())
+                .gender(request.gender())
                 .birthday(request.birthday())
                 .expectations(request.expectations())
                 .isTermsAgreed(request.isTermsAgreed())
