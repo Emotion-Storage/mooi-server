@@ -43,14 +43,6 @@ public class HomeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @DeleteMapping("/emotion-conversation/{roomId}")
-    @Operation(summary = "테스트 채팅방 종료를 위한 API", description = "테스트용 감정 대화 채팅방을 종료합니다.")
-    public ResponseEntity<ApiResponse<ChatRoomCloseResponse>> closeTestChatRoom(@PathVariable String roomId) {
-        log.info("채팅방 {}를 종료 상태로 업데이트 합니다.", roomId);
-        ApiResponse<ChatRoomCloseResponse> response = chatService.closeTestChatRoom(roomId);
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping("/tickets")
     @Operation(summary = "티켓 상태(잔여 개수) 조회", description = "사용자가 가지고 있는 티켓 개수를 반환합니다.")
     public ResponseEntity<ApiResponse<TicketStatusResponse>> getTickets(
