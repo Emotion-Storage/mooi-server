@@ -111,4 +111,8 @@ public class User extends BaseTimeEntity {
         this.notifications.remove(notification);
         notification.setUser(null);
     }
+
+    public void useKeys(Long keyCount) {
+        this.keyCount -= keyCount;
+    }
 }

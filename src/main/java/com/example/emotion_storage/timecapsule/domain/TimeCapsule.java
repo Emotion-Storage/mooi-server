@@ -43,8 +43,10 @@ public class TimeCapsule extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String dialogueSummary;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String myMindNote;
+
+    private LocalDateTime favoriteAt;
 
     private LocalDateTime openedAt;
 
@@ -83,5 +85,25 @@ public class TimeCapsule extends BaseTimeEntity {
 
     public void setReport(Report report) {
         this.report = report;
+    }
+
+    public void setFavoriteAt(LocalDateTime favoriteAt) {
+        this.favoriteAt = favoriteAt;
+    }
+
+    public void setIsFavorite(Boolean isFavorite) {
+        this.isFavorite = isFavorite;
+    }
+
+    public void setIsOpened(Boolean isOpened) {
+        this.isOpened = isOpened;
+    }
+
+    public void updateMyMindNote(String myMindNote) {
+        this.myMindNote = myMindNote;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

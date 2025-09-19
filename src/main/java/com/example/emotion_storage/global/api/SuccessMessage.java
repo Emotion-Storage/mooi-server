@@ -20,7 +20,19 @@ public enum SuccessMessage {
     GET_NEW_TIME_CAPSULE_SUCCESS("도착한 타임캡슐 여부 조회 성공"),
     GET_NEW_DAILY_REPORT_SUCCESS("새로운 일일리포트 여부 조회 성공"),
     GET_NEW_NOTIFICATION_SUCCESS("신규 알림 여부 조회 성공"),
-    GET_HOME_INFO_SUCCESS("홈 화면 정보 API 조회 성공");
+    GET_HOME_INFO_SUCCESS("홈 화면 정보 API 조회 성공"),
+
+    // Time Capsule
+    GET_MONTHLY_TIME_CAPSULE_DATES_SUCCESS("월별 타임캡슐 날짜 목록 조회 성공"),
+    GET_TIME_CAPSULE_LIST_SUCCESS("타임캡슐 목록 조회 성공"),
+    GET_FAVORITE_TIME_CAPSULE_LIST_SUCCESS("즐겨찾기 타임캡슐 목록 조회 성공"),
+    ADD_FAVORITE_TIME_CAPSULE_SUCCESS("타임캡슐 즐겨찾기 추가 성공"),
+    REMOVE_FAVORITE_TIME_CAPSULE_SUCCESS("타임캡슐 즐겨찾기 해제 성공"),
+    GET_TIME_CAPSULE_DETAIL_SUCCESS("타임캡슐 상세 조회 성공"),
+    OPEN_TIME_CAPSULE_SUCCESS("타임캡슐 열람 성공"),
+    UPDATE_TIME_CAPSULE_MIND_NOTE_SUCCESS("타임캡슐 내 마음 노트 수정 성공"),
+    DELETE_TIME_CAPSULE_SUCCESS("타임캡슐 삭제 성공"),
+    ;
 
     private final String message;
 }
