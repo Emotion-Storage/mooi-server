@@ -7,11 +7,6 @@ import com.example.emotion_storage.global.api.ApiResponse;
 import com.example.emotion_storage.global.api.SuccessMessage;
 import com.example.emotion_storage.global.security.principal.CustomUserPrincipal;
 import com.example.emotion_storage.home.dto.response.HomeInfoResponse;
-import com.example.emotion_storage.home.dto.response.KeyCountResponse;
-import com.example.emotion_storage.home.dto.response.NewDailyReportResponse;
-import com.example.emotion_storage.home.dto.response.NewNotificationResponse;
-import com.example.emotion_storage.home.dto.response.NewTimeCapsuleResponse;
-import com.example.emotion_storage.home.dto.response.TicketStatusResponse;
 import com.example.emotion_storage.home.service.HomeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,22 +32,27 @@ public class HomeController {
     private final HomeService homeService;
     private final ChatService chatService;
 
-    @PostMapping("emotion-conversation/test")
-    @Operation(summary = "감정 대화 테스트를 위한 채팅방 반환 API", description = "감정 대화 테스트를 위한 채팅방 ID를 생성하고 반환합니다.")
-    public ResponseEntity<ApiResponse<ChatRoomCreateResponse>> createChatRoomForTest(
+    @PostMapping("/emotion-conversation")
+    @Operation(summary = "감정 대화 시작", description = "감정 대화를 시작하기 위해 채팅방 id를 생성 후 반환합니다.")
+    public ResponseEntity<ApiResponse<ChatRoomCreateResponse>> createChatRoom(
             @AuthenticationPrincipal CustomUserPrincipal userPrincipal
     ) {
         Long userId = userPrincipal != null ? userPrincipal.getId() : 1L; // TODO: 개발 테스트를 위한 코드
-        ApiResponse<ChatRoomCreateResponse> response = chatService.createTestChatRoom(userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        log.info("사용자 {}의 감정 대화 시작을 위해 채팅방 개설을 진행합니다.", userId);
+        ChatRoomCreateResponse response = chatService.createChatRoom(userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(SuccessMessage.CHAT_ROOM_CREATE_SUCCESS.getMessage(), response));
     }
 
     @DeleteMapping("/emotion-conversation/{roomId}")
-    @Operation(summary = "테스트 채팅방 종료를 위한 API", description = "테스트용 감정 대화 채팅방을 종료합니다.")
-    public ResponseEntity<ApiResponse<ChatRoomCloseResponse>> closeTestChatRoom(@PathVariable String roomId) {
-        log.info("채팅방 {}를 종료 상태로 업데이트 합니다.", roomId);
-        ApiResponse<ChatRoomCloseResponse> response = chatService.closeTestChatRoom(roomId);
-        return ResponseEntity.ok(response);
+    @Operation(summary = "감정 대화 종료", description = "감정 대화 채팅방을 종료합니다.")
+    public ResponseEntity<ApiResponse<ChatRoomCloseResponse>> closeChatRoom(
+            @PathVariable Long roomId,
+            @AuthenticationPrincipal CustomUserPrincipal userPrincipal) {
+        Long userId = userPrincipal != null ? userPrincipal.getId() : 1L; // TODO: 개발 테스트를 위한 코드
+        log.info("사용자 {}의 감정 대화를 종료하고 채팅방 {}를 종료 상태로 업데이트 합니다.", userId, roomId);
+        ChatRoomCloseResponse response = chatService.closeChatRoom(userId, roomId);
+        return ResponseEntity.ok(ApiResponse.success(SuccessMessage.CHAT_ROOM_CLOSE_SUCCESS.getMessage(), response));
     }
 
     @GetMapping("")
@@ -65,6 +65,4 @@ public class HomeController {
                 .body(ApiResponse.success(SuccessMessage.GET_HOME_INFO_SUCCESS.getMessage(), 
                         homeService.getHomeInfo(userId)));
     }
-
 }
-

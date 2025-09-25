@@ -8,8 +8,6 @@ import com.example.emotion_storage.chat.dto.response.ChatRoomCloseResponse;
 import com.example.emotion_storage.chat.dto.response.ChatRoomCreateResponse;
 import com.example.emotion_storage.chat.repository.ChatRepository;
 import com.example.emotion_storage.chat.repository.ChatRoomRepository;
-import com.example.emotion_storage.global.api.ApiResponse;
-import com.example.emotion_storage.global.api.SuccessMessage;
 import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
 import com.example.emotion_storage.user.domain.User;
@@ -32,13 +30,8 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRepository chatRepository;
 
-    public void chatTest(UserMessageDto userMessage) {
-        String message = "안녕하세요, 저는 MOOI입니다. 메시지를 보내주세요.";
-        messagingTemplate.convertAndSend("/sub/chatroom/" + userMessage.roomId(), message);
-    }
-
     @Transactional
-    public ApiResponse<ChatRoomCreateResponse> createTestChatRoom(Long userId) {
+    public ChatRoomCreateResponse createChatRoom(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
@@ -46,19 +39,18 @@ public class ChatService {
                 .user(user)
                 .isEnded(false)
                 .build();
+        user.addChatRoom(chatRoom);
 
         chatRoomRepository.save(chatRoom);
 
-        log.info("채팅방 {}가 생성되었습니다.", chatRoom.getId());
+        log.info("사용자 {}가 감정대화를 진행할 수 있는 채팅방 id {} 생성이 완료되었습니다.", userId, chatRoom.getId());
 
-        ChatRoomCreateResponse response = new ChatRoomCreateResponse(chatRoom.getId().toString());
-
-        return ApiResponse.success(SuccessMessage.CHAT_ROOM_CREATE_SUCCESS.getMessage(), response);
+        return new ChatRoomCreateResponse(chatRoom.getId());
     }
 
     @Transactional
     public void saveUserMessage(UserMessageDto userMessage) {
-        ChatRoom chatRoom = chatRoomRepository.findById(Long.parseLong(userMessage.roomId()))
+        ChatRoom chatRoom = chatRoomRepository.findById(userMessage.roomId())
                 .orElseThrow(() -> new BaseException(ErrorCode.CHAT_ROOM_NOT_FOUND));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"); // 프론트 포맷에 맞춰 변경 필요
@@ -77,19 +69,27 @@ public class ChatService {
                 .chatTime(LocalDateTime.parse(userMessage.timestamp(), formatter))
                 .build();
 
+        chatRoom.addChat(chat);
         chatRepository.save(chat);
     }
 
     @Transactional
-    public ApiResponse<ChatRoomCloseResponse> closeTestChatRoom(String roomId) {
-        ChatRoom chatRoom = chatRoomRepository.findById(Long.parseLong(roomId))
+    public ChatRoomCloseResponse closeChatRoom(Long userId, Long roomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new BaseException(ErrorCode.CHAT_ROOM_NOT_FOUND));
 
+        if (!chatRoom.getUser().getId().equals(userId)) {
+            throw new BaseException(ErrorCode.CHAT_ROOM_ACCESS_DENIED);
+        }
+
         log.info("채팅방 {}에서 감정 대화 종료를 요청했습니다.", roomId);
-        chatRoom.updateChatRoomStatus(true);
+        chatRoom.closeChatRoom(true);
 
-        ChatRoomCloseResponse response = new ChatRoomCloseResponse(true);
+        return new ChatRoomCloseResponse(true);
+    }
 
-        return ApiResponse.success(SuccessMessage.CHAT_ROOM_CLOSE_SUCCESS.getMessage(), response);
+    public void sendToUser(Long roomId, String message) { // 추루에 AI 메시지 DTO 형식으로 변경
+        messagingTemplate.convertAndSend("/sub/chatroom/" + roomId, message);
+        // messagingTemplate.convertAndSend("sub/chatroom/" + roomId, AiMessageDto);
     }
 }
