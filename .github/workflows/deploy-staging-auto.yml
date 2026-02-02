@@ -1,0 +1,129 @@
+name: Deploy - Auto (Staging)
+
+on:
+  push:
+    branches: [ "develop" ]
+
+# 연속 push로 배포 겹치는 것 방지
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      - name: Make Directory
+        run: mkdir -p deploy
+
+      - name: Copy Jar
+        run: cp ./build/libs/*.jar ./deploy
+
+      - name: Make zip file
+        run: |
+          cp appspec.yml ./deploy/
+          cp -r scripts ./deploy/
+          cd deploy
+          zip -r ../mooi-server-${{ github.run_number }}.zip .
+          cd ..
+
+      - name: Configure AWS credentials (staging)
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: ap-northeast-2
+
+      - name: Upload to S3 (staging)
+        run: |
+          aws s3 cp --region ap-northeast-2 ./mooi-server-${{ github.run_number }}.zip s3://${{ vars.S3_BUCKET_NAME_STAGING }}/
+          echo "✅ Artifact uploaded: mooi-server-${{ github.run_number }}.zip"
+
+      # 업로드 검증
+      - name: Verify artifact exists on S3
+        run: |
+          aws s3 ls s3://${{ vars.S3_BUCKET_NAME_STAGING }}/mooi-server-${{ github.run_number }}.zip
+          echo "✅ Artifact verified on S3"
+
+      - name: Create Release Info
+        run: |
+          cat > release-info.json << EOF
+          {
+            "version": "${{ github.run_number }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "commit_message": "${{ github.event.head_commit.message }}",
+            "artifact_key": "mooi-server-${{ github.run_number }}.zip",
+            "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "workflow_run_id": "${{ github.run_id }}",
+            "build_status": "success"
+          }
+          EOF
+
+      - name: Store Release Info (staging)
+        run: |
+          aws s3 cp --region ap-northeast-2 release-info.json s3://${{ vars.S3_BUCKET_NAME_STAGING }}/releases/release-${{ github.run_number }}.json
+          echo "✅ Release info stored"
+
+      - name: Deploy to Staging via CodeDeploy (auto)
+        id: deployment
+        run: |
+          DEPLOYMENT_ID=$(aws deploy create-deployment \
+            --application-name ${{ vars.APPLICATION_NAME_STAGING }} \
+            --deployment-group-name ${{ vars.DEPLOY_GROUP_NAME_STAGING }} \
+            --file-exists-behavior OVERWRITE \
+            --s3-location bucket=${{ vars.S3_BUCKET_NAME_STAGING }},bundleType=zip,key=mooi-server-${{ github.run_number }}.zip \
+            --region ap-northeast-2 \
+            --description "AUTO staging deploy - Version: ${{ github.run_number }} (develop)" \
+            --query 'deploymentId' --output text)
+
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          echo "✅ Deployment ID: $DEPLOYMENT_ID"
+
+      - name: Wait for deployment completion
+        run: |
+          DEPLOYMENT_ID="${{ steps.deployment.outputs.deployment_id }}"
+          echo "Waiting for deployment: $DEPLOYMENT_ID"
+
+          while true; do
+            STATUS=$(aws deploy get-deployment --deployment-id "$DEPLOYMENT_ID" --query 'deploymentInfo.status' --output text)
+            echo "Deployment status: $STATUS"
+
+            if [ "$STATUS" = "Succeeded" ]; then
+              echo "✅ Deployment succeeded!"
+              break
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Stopped" ]; then
+              echo "❌ Deployment failed: $STATUS"
+              echo "---- deployment detail ----"
+              aws deploy get-deployment --deployment-id "$DEPLOYMENT_ID" --output json || true
+              exit 1
+            fi
+
+            sleep 20
+          done
+
+      - name: Notify success
+        run: |
+          echo "✅ Staging auto deploy completed"
+          echo "Version: ${{ github.run_number }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Message: ${{ github.event.head_commit.message }}"
+          echo "Deployment ID: ${{ steps.deployment.outputs.deployment_id }}"
