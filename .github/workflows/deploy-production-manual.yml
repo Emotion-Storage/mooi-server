@@ -1,0 +1,125 @@
+name: Deploy - Manual (Production)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "배포할 버전(CI run_number)"
+        required: true
+        type: string
+      description:
+        description: "배포 설명"
+        required: false
+        default: "Manual production deploy"
+        type: string
+
+concurrency:
+  group: deploy-production-manual
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+
+    steps:
+      - name: Configure AWS credentials (prod)
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: ap-northeast-2
+
+      - name: Verify artifact exists on S3 (prod)
+        run: |
+          aws s3 ls s3://${{ vars.S3_BUCKET_NAME_PROD }}/mooi-server-${{ inputs.version }}.zip
+          echo "✅ Artifact exists: mooi-server-${{ inputs.version }}.zip"
+
+      - name: Fetch release info (prod)
+        run: |
+          aws s3 cp \
+            s3://${{ vars.S3_BUCKET_NAME_PROD }}/releases/release-${{ inputs.version }}.json \
+            release-info.json
+          echo "✅ Release info downloaded"
+
+      - name: Read & validate release info (jq)
+        id: meta
+        run: |
+          BUILD_STATUS=$(jq -r '.build_status' release-info.json)
+          BRANCH=$(jq -r '.branch' release-info.json)
+          COMMIT=$(jq -r '.commit' release-info.json)
+          COMMIT_MESSAGE=$(jq -r '.commit_message' release-info.json)
+
+          echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
+          echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
+          if [ "$BUILD_STATUS" != "success" ]; then
+            echo "❌ Build status is not success: $BUILD_STATUS"
+            cat release-info.json
+            exit 1
+          fi
+
+          if [ "$BRANCH" != "production" ]; then
+            echo "❌ Production deploy allows only production artifacts. branch=$BRANCH"
+            cat release-info.json
+            exit 1
+          fi
+
+          echo "✅ Release info validated: build_status=$BUILD_STATUS, branch=$BRANCH"
+
+      - name: Deploy to Production via CodeDeploy
+        id: deployment
+        run: |
+          DEPLOYMENT_ID=$(aws deploy create-deployment \
+            --application-name ${{ vars.APPLICATION_NAME_PROD }} \
+            --deployment-group-name ${{ vars.DEPLOY_GROUP_NAME_PROD }} \
+            --file-exists-behavior OVERWRITE \
+            --s3-location bucket=${{ vars.S3_BUCKET_NAME_PROD }},bundleType=zip,key=mooi-server-${{ inputs.version }}.zip \
+            --region ap-northeast-2 \
+            --description "${{ inputs.description }} - Version: ${{ inputs.version }} - Run: ${{ github.run_number }}" \
+            --query 'deploymentId' --output text)
+
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          echo "✅ Deployment ID: $DEPLOYMENT_ID"
+
+      - name: Wait for deployment completion
+        run: |
+          DEPLOYMENT_ID="${{ steps.deployment.outputs.deployment_id }}"
+          echo "Waiting for deployment: $DEPLOYMENT_ID"
+
+          while true; do
+            STATUS=$(aws deploy get-deployment \
+              --deployment-id "$DEPLOYMENT_ID" \
+              --query 'deploymentInfo.status' \
+              --output text)
+
+            echo "Deployment status: $STATUS"
+
+            if [ "$STATUS" = "Succeeded" ]; then
+              echo "✅ Deployment succeeded!"
+              break
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Stopped" ]; then
+              echo "❌ Deployment failed: $STATUS"
+              aws deploy get-deployment --deployment-id "$DEPLOYMENT_ID" --output json || true
+              exit 1
+            fi
+
+            sleep 20
+          done
+
+      - name: Notify deployment summary
+        run: |
+          echo "✅ Production deploy completed"
+          echo "Version: ${{ inputs.version }}"
+          echo "Description: ${{ inputs.description }}"
+          echo "Deployment ID: ${{ steps.deployment.outputs.deployment_id }}"
+          echo "Branch: ${{ steps.meta.outputs.branch }}"
+          echo "Build: ${{ steps.meta.outputs.build_status }}"
+          echo "Commit: ${{ steps.meta.outputs.commit }}"
+          echo "Commit Message: ${{ steps.meta.outputs.commit_message }}"
