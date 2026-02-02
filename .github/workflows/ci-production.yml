@@ -1,0 +1,86 @@
+name: CI - Build & Upload (Production)
+
+on:
+  push:
+    branches: [ "production" ]
+
+concurrency:
+  group: ci-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      - name: Package for CodeDeploy
+        run: |
+          mkdir -p deploy
+
+          JAR_NAME=$(ls -tr ./build/libs/*SNAPSHOT.jar 2>/dev/null | tail -n 1)
+          if [ -z "$JAR_NAME" ]; then
+            echo "❌ SNAPSHOT jar not found in build/libs"
+            ls -al ./build/libs || true
+            exit 1
+          fi
+
+          cp "$JAR_NAME" ./deploy/
+          cp appspec.yml ./deploy/
+          cp -r scripts ./deploy/
+
+          cd deploy
+          zip -r ../mooi-server-${{ github.run_number }}.zip .
+          cd ..
+
+      - name: Configure AWS credentials (prod)
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: ap-northeast-2
+
+      - name: Upload artifact to S3 (prod)
+        run: |
+          aws s3 cp --region ap-northeast-2 \
+            ./mooi-server-${{ github.run_number }}.zip \
+            s3://${{ vars.S3_BUCKET_NAME_PROD }}/
+
+          aws s3 ls s3://${{ vars.S3_BUCKET_NAME_PROD }}/mooi-server-${{ github.run_number }}.zip
+          echo "✅ Uploaded + verified: mooi-server-${{ github.run_number }}.zip"
+
+      - name: Store release info (prod)
+        run: |
+          cat > release-info.json << EOF
+          {
+            "version": "${{ github.run_number }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "commit_message": "${{ github.event.head_commit.message }}",
+            "artifact_key": "mooi-server-${{ github.run_number }}.zip",
+            "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "workflow_run_id": "${{ github.run_id }}",
+            "workflow_run_number": "${{ github.run_number }}",
+            "build_status": "success"
+          }
+          EOF
+
+          aws s3 cp --region ap-northeast-2 release-info.json \
+            s3://${{ vars.S3_BUCKET_NAME_PROD }}/releases/release-${{ github.run_number }}.json
+
+          aws s3 ls s3://${{ vars.S3_BUCKET_NAME_PROD }}/releases/release-${{ github.run_number }}.json
+          echo "✅ Release info stored"
