@@ -1,0 +1,124 @@
+name: Rollback - Manual (Staging)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_version:
+        description: "롤백할 버전(CI run_number)"
+        required: true
+        type: string
+      reason:
+        description: "롤백 사유"
+        required: false
+        default: "Rollback due to issues"
+        type: string
+
+concurrency:
+  group: rollback-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+
+    steps:
+      - name: Configure AWS credentials (staging)
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: ap-northeast-2
+
+      - name: Verify target artifact exists on S3 (staging)
+        run: |
+          aws s3 ls s3://${{ vars.S3_BUCKET_NAME_STAGING }}/mooi-server-${{ inputs.target_version }}.zip
+          echo "✅ Target artifact exists: mooi-server-${{ inputs.target_version }}.zip"
+
+      - name: Fetch target release info (staging)
+        run: |
+          aws s3 cp \
+            s3://${{ vars.S3_BUCKET_NAME_STAGING }}/releases/release-${{ inputs.target_version }}.json \
+            target-release-info.json
+          echo "✅ Target release info downloaded"
+
+      - name: Validate target release info (jq)
+        id: meta
+        run: |
+          BUILD_STATUS=$(jq -r '.build_status' target-release-info.json)
+          BRANCH=$(jq -r '.branch' target-release-info.json)
+          COMMIT=$(jq -r '.commit' target-release-info.json)
+          COMMIT_MESSAGE=$(jq -r '.commit_message' target-release-info.json)
+
+          echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
+          echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
+          if [ "$BUILD_STATUS" != "success" ]; then
+            echo "❌ Target build_status is not success: $BUILD_STATUS"
+            cat target-release-info.json
+            exit 1
+          fi
+
+          # ✅ staging 롤백은 develop 산출물만 허용
+          if [ "$BRANCH" != "develop" ]; then
+            echo "❌ Staging rollback allows only develop artifacts. branch=$BRANCH"
+            cat target-release-info.json
+            exit 1
+          fi
+
+          echo "✅ Target release validated"
+
+      - name: Rollback via CodeDeploy (staging)
+        id: deployment
+        run: |
+          DEPLOYMENT_ID=$(aws deploy create-deployment \
+            --application-name ${{ vars.APPLICATION_NAME_STAGING }} \
+            --deployment-group-name ${{ vars.DEPLOY_GROUP_NAME_STAGING }} \
+            --file-exists-behavior OVERWRITE \
+            --s3-location bucket=${{ vars.S3_BUCKET_NAME_STAGING }},bundleType=zip,key=mooi-server-${{ inputs.target_version }}.zip \
+            --region ap-northeast-2 \
+            --description "ROLLBACK(staging): ${{ inputs.reason }} - Version: ${{ inputs.target_version }} - Run: ${{ github.run_number }}" \
+            --query 'deploymentId' --output text)
+
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          echo "✅ Rollback Deployment ID: $DEPLOYMENT_ID"
+
+      - name: Wait for rollback completion
+        run: |
+          DEPLOYMENT_ID="${{ steps.deployment.outputs.deployment_id }}"
+          echo "Waiting for rollback deployment: $DEPLOYMENT_ID"
+
+          while true; do
+            STATUS=$(aws deploy get-deployment \
+              --deployment-id "$DEPLOYMENT_ID" \
+              --query 'deploymentInfo.status' \
+              --output text)
+
+            echo "Rollback status: $STATUS"
+
+            if [ "$STATUS" = "Succeeded" ]; then
+              echo "✅ Rollback succeeded!"
+              break
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Stopped" ]; then
+              echo "❌ Rollback failed: $STATUS"
+              aws deploy get-deployment --deployment-id "$DEPLOYMENT_ID" --output json || true
+              exit 1
+            fi
+
+            sleep 20
+          done
+
+      - name: Notify rollback summary
+        run: |
+          echo "✅ Staging rollback completed"
+          echo "Target Version: ${{ inputs.target_version }}"
+          echo "Reason: ${{ inputs.reason }}"
+          echo "Deployment ID: ${{ steps.deployment.outputs.deployment_id }}"
+          echo "Commit: ${{ steps.meta.outputs.commit }}"
+          echo "Commit Message: ${{ steps.meta.outputs.commit_message }}"
