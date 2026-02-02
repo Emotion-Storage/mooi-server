@@ -1,0 +1,110 @@
+name: Deploy - Manual (Staging)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "배포할 버전(CI run_number)"
+        required: true
+        type: string
+      description:
+        description: "배포 설명"
+        required: false
+        default: "Manual staging deploy"
+        type: string
+
+concurrency:
+  group: deploy-staging-manual
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+
+    steps:
+      - name: Configure AWS credentials (staging)
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: ap-northeast-2
+
+      - name: Verify artifact exists on S3
+        run: |
+          aws s3 ls s3://${{ vars.S3_BUCKET_NAME_STAGING }}/mooi-server-${{ inputs.version }}.zip
+          echo "✅ Artifact exists: mooi-server-${{ inputs.version }}.zip"
+
+      - name: Fetch release info
+        run: |
+          aws s3 cp \
+            s3://${{ vars.S3_BUCKET_NAME_STAGING }}/releases/release-${{ inputs.version }}.json \
+            release-info.json
+          echo "✅ Release info downloaded"
+
+      - name: Validate release info (build_status + branch)
+        run: |
+          python - << 'PY'
+          import json, sys
+          with open("release-info.json","r",encoding="utf-8") as f:
+              data=json.load(f)
+
+          build_status = data.get("build_status", "")
+          branch = data.get("branch", "")
+
+          if build_status != "success":
+              print(f"❌ build_status is not success: {build_status}")
+              sys.exit(1)
+
+          if branch != "develop":
+              print(f"❌ staging deploy is allowed only for develop artifacts. branch={branch}")
+              sys.exit(1)
+
+          print(f"✅ build_status={build_status}, branch={branch}")
+          PY
+
+      - name: Deploy to Staging via CodeDeploy (manual)
+        id: deployment
+        run: |
+          DEPLOYMENT_ID=$(aws deploy create-deployment \
+            --application-name ${{ vars.APPLICATION_NAME_STAGING }} \
+            --deployment-group-name ${{ vars.DEPLOY_GROUP_NAME_STAGING }} \
+            --file-exists-behavior OVERWRITE \
+            --s3-location bucket=${{ vars.S3_BUCKET_NAME_STAGING }},bundleType=zip,key=mooi-server-${{ inputs.version }}.zip \
+            --region ap-northeast-2 \
+            --description "${{ inputs.description }} - Version: ${{ inputs.version }} - Run: ${{ github.run_number }}" \
+            --query 'deploymentId' --output text)
+
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          echo "✅ Deployment ID: $DEPLOYMENT_ID"
+
+      - name: Wait for deployment completion
+        run: |
+          DEPLOYMENT_ID="${{ steps.deployment.outputs.deployment_id }}"
+          echo "Waiting for deployment: $DEPLOYMENT_ID"
+
+          while true; do
+            STATUS=$(aws deploy get-deployment --deployment-id "$DEPLOYMENT_ID" --query 'deploymentInfo.status' --output text)
+            echo "Deployment status: $STATUS"
+
+            if [ "$STATUS" = "Succeeded" ]; then
+              echo "✅ Deployment succeeded!"
+              break
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Stopped" ]; then
+              echo "❌ Deployment failed: $STATUS"
+              aws deploy get-deployment --deployment-id "$DEPLOYMENT_ID" --output json || true
+              exit 1
+            fi
+
+            sleep 20
+          done
+
+      - name: Notify deployment summary
+        run: |
+          echo "✅ Manual staging deploy completed"
+          echo "Version: ${{ inputs.version }}"
+          echo "Description: ${{ inputs.description }}"
+          echo "Deployment ID: ${{ steps.deployment.outputs.deployment_id }}"
+          echo "Release info:"
+          cat release-info.json
