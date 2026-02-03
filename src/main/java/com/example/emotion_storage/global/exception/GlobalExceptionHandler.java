@@ -21,12 +21,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleException(Exception exception, HttpServletRequest request) {
         log.error("[Exception]", exception);
 
-        String requestId = (String) request.getAttribute("requestId");
-        if (requestId == null) {
-            requestId = MDC.get("requestId");
-        }
+        String requestId = resolveRequestId(request);
 
-        discordErrorNotifier.notifyUnexpectedException(requestId, request, exception);
+        discordErrorNotifier.notifyException(requestId, request, exception);
 
         ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity
@@ -35,11 +32,35 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BaseException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException baseException) {
+    public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException baseException, HttpServletRequest request) {
         log.error("[BaseException]", baseException);
+
+        String requestId = resolveRequestId(request);
+
+        discordErrorNotifier.notifyException(requestId, request, baseException);
+
         ErrorCode errorCode = baseException.getErrorCode();
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
                 .body(ApiResponse.fail(errorCode));
+    }
+
+    private String resolveRequestId(HttpServletRequest request) {
+        if (request == null) {
+            return safe(MDC.get("requestId"), "unknown");
+        }
+
+        String requestId = (String) request.getAttribute("requestId");
+        if (requestId == null) {
+            requestId = MDC.get("requestId");
+        }
+        return safe(requestId, "unknown");
+    }
+
+    private String safe(String value, String fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value;
     }
 }
