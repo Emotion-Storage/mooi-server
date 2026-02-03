@@ -40,3 +40,8 @@ ai:
     timeout: 30000
   server:
     base-url: ${AI_SERVER_BASE_URL}
+
+monitoring:
+  discord:
+    enabled: false
+    error-webhook-url: ${DISCORD_ERROR_WEBHOOK_URL:}
