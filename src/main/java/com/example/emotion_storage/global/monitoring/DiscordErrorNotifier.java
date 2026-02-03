@@ -22,8 +22,18 @@ public class DiscordErrorNotifier {
     private static final int EXCEPTION_MESSAGE_LIMIT = 300;
     private static final String TRUNC_SUFFIX = "\n...(truncated)";
 
+    // 스캔/소음 경로는 제외
+    private static final String[] IGNORE_PATH_PREFIXES = {
+            "/docs",
+            "/.git",
+            "/.env",
+            "/wp-admin",
+            "/phpMyAdmin",
+            "/favicon"
+    };
+
     private static final String TEMPLATE = """
-        🚨 **UNEXPECTED SERVER ERROR**
+        🚨 **SERVER EXCEPTION (테스트 서버 에러 메시지입니다.)**
         - requestId: `%s`
         - request: `%s %s%s`
         - exception: `%s`
@@ -40,8 +50,11 @@ public class DiscordErrorNotifier {
     private final RestTemplate restTemplate;
 
     @Async("discordNotifierExecutor")
-    public void notifyUnexpectedException(String requestId, HttpServletRequest request, Throwable exception) {
+    public void notifyException(String requestId, HttpServletRequest request, Throwable exception) {
         if (!enabled || webhookUrl == null || webhookUrl.isBlank()) {
+            return;
+        }
+        if (shouldIgnore(request)) {
             return;
         }
 
@@ -67,6 +80,24 @@ public class DiscordErrorNotifier {
         );
 
         sendToDiscord(truncateForDiscord(content));
+    }
+
+    private boolean shouldIgnore(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+
+        String uri = request.getRequestURI();
+        if (uri == null || uri.isBlank()) {
+            return false;
+        }
+
+        for (String prefix : IGNORE_PATH_PREFIXES) {
+            if (uri.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void sendToDiscord(String content) {
