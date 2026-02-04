@@ -5,17 +5,17 @@ set -e  # 에러 발생 시 스크립트 중단
 REPOSITORY=/home/ubuntu/app
 LOG_FILE=$REPOSITORY/deploy.log
 
+# 로그 함수
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a $LOG_FILE
+}
+
 # 환경 변수 로드
 log "> 환경 변수 로드"
 source ~/.bashrc
 
 SPRING_PROFILE=${SPRING_PROFILE:-prod}
 PORT=${PORT:-8080}
-
-# 로그 함수
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a $LOG_FILE
-}
 
 log "=== 배포 시작 ==="
 
