@@ -4,6 +4,11 @@ set -e  # 에러 발생 시 스크립트 중단
 
 REPOSITORY=/home/ubuntu/app
 LOG_FILE=$REPOSITORY/deploy.log
+
+# 환경 변수 로드
+log "> 환경 변수 로드"
+source ~/.bashrc
+
 SPRING_PROFILE=${SPRING_PROFILE:-prod}
 PORT=${PORT:-8080}
 
@@ -13,10 +18,6 @@ log() {
 }
 
 log "=== 배포 시작 ==="
-
-# 환경 변수 로드
-log "> 환경 변수 로드"
-source ~/.bashrc
 
 log "> PROFILE=$SPRING_PROFILE / PORT=$PORT"
 
@@ -53,7 +54,7 @@ chmod +x $JAR_NAME
 # 애플리케이션 실행
 log "> $JAR_NAME 실행 (spring.profiles.active=$SPRING_PROFILE)"
 nohup java -jar \
-    -Dspring.profiles.active=prod \
+    -Dspring.profiles.active=$SPRING_PROFILE \
     -Duser.timezone=Asia/Seoul \
     -Xms512m \
     -Xmx1024m \
