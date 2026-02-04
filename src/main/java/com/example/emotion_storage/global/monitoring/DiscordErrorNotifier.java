@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @Service
@@ -54,7 +55,7 @@ public class DiscordErrorNotifier {
         if (!enabled || webhookUrl == null || webhookUrl.isBlank()) {
             return;
         }
-        if (shouldIgnore(request)) {
+        if (shouldIgnore(request, exception)) {
             return;
         }
 
@@ -82,7 +83,7 @@ public class DiscordErrorNotifier {
         sendToDiscord(truncateForDiscord(content));
     }
 
-    private boolean shouldIgnore(HttpServletRequest request) {
+    private boolean shouldIgnore(HttpServletRequest request, Throwable exception) {
         if (request == null) {
             return false;
         }
@@ -90,6 +91,14 @@ public class DiscordErrorNotifier {
         String uri = request.getRequestURI();
         if (uri == null || uri.isBlank()) {
             return false;
+        }
+
+        if (uri.startsWith("/api")) {
+            return false;
+        }
+
+        if (exception instanceof NoResourceFoundException) {
+            return true;
         }
 
         for (String prefix : IGNORE_PATH_PREFIXES) {
