@@ -73,6 +73,10 @@ dependencies {
 	implementation 'org.java-websocket:Java-WebSocket:1.5.3'
 
 	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+	// flyway
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-mysql'
 }
 
 tasks.named('test') {
