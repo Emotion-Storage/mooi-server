@@ -17,25 +17,25 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: ${{ vars.CI_DB_NAME }}
-          MYSQL_USER: ${{ vars.CI_DB_USER }}
-          MYSQL_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ secrets.CI_DB_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ci_db
+          MYSQL_USER: ci_user
+          MYSQL_PASSWORD: ci_password
+          MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -p${{ secrets.CI_DB_ROOT_PASSWORD }}"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10   
 
     env:
       SPRING_PROFILES_ACTIVE: ci
-      CI_DB_HOST: ${{ vars.CI_DB_HOST }}
-      CI_DB_PORT: ${{ vars.CI_DB_PORT }}
-      CI_DB_NAME: ${{ vars.CI_DB_NAME }}
-      CI_DB_USER: ${{ vars.CI_DB_USER }}
-      CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+      CI_DB_HOST: 127.0.0.1
+      CI_DB_PORT: 3306
+      CI_DB_NAME: ci_db
+      CI_DB_USER: ci_user
+      CI_DB_PASSWORD: ci_password
 
     steps:
       - uses: actions/checkout@v3
@@ -46,6 +46,21 @@ jobs:
           distribution: "temurin"
 
       - run: chmod +x gradlew
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            mysqladmin ping \
+              -h 127.0.0.1 \
+              -P 3306 \
+              -u root \
+              -proot \
+              --silent && echo "✅ MySQL is up" && exit 0
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+          echo "❌ MySQL not ready"
+          exit 1
 
       - name: Run tests
         run: ./gradlew test
