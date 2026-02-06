@@ -10,10 +10,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: ${{ vars.CI_DB_NAME }}
+          MYSQL_USER: ${{ vars.CI_DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.CI_DB_ROOT_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -p${{ secrets.CI_DB_ROOT_PASSWORD }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10   
+
+    env:
+      SPRING_PROFILES_ACTIVE: ci
+      CI_DB_HOST: ${{ vars.CI_DB_HOST }}
+      CI_DB_PORT: ${{ vars.CI_DB_PORT }}
+      CI_DB_NAME: ${{ vars.CI_DB_NAME }}
+      CI_DB_USER: ${{ vars.CI_DB_USER }}
+      CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - run: chmod +x gradlew
+
+      - name: Run tests
+        run: ./gradlew test
+
   build_and_deploy:
     runs-on: ubuntu-latest
     environment:
       name: staging
+
+    needs: verify
 
     steps:
       - name: Checkout
