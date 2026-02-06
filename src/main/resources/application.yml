@@ -1,13 +1,22 @@
 spring:
   application:
     name: emotion-storage
+
   profiles:
     active: local
+
   task:
     scheduling:
       pool:
         size: 5
       thread-name-prefix: "scheduled-task-"
+
+  spring:
+    flyway:
+      enabled: true
+      baseline-on-migrate: true
+      baseline-version: 1
+      baseline-description: baseline
 
 rest-template:
   connect-timeout: 5000
