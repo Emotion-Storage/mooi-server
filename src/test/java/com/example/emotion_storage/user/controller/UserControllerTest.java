@@ -11,6 +11,7 @@ import com.example.emotion_storage.global.api.SuccessMessage;
 import com.example.emotion_storage.global.config.TestSecurityConfig;
 import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
+import com.example.emotion_storage.global.monitoring.DiscordErrorNotifier;
 import com.example.emotion_storage.user.domain.Gender;
 import com.example.emotion_storage.user.dto.request.GoogleLoginRequest;
 import com.example.emotion_storage.user.dto.request.GoogleSignUpRequest;
@@ -41,6 +42,7 @@ public class UserControllerTest {
     @Autowired private ObjectMapper objectMapper;
     @MockitoBean UserService userService;
     @MockitoBean JpaMetamodelMappingContext jpaMetamodelMappingContext;
+    @MockitoBean private DiscordErrorNotifier discordErrorNotifier;
 
     @Test
     void 구글_로그인_성공할_때는_액세스_토큰을_반환한다() throws Exception {

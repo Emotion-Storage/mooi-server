@@ -11,7 +11,9 @@ import com.example.emotion_storage.global.api.SuccessMessage;
 import com.example.emotion_storage.global.config.TestSecurityConfig;
 import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
+import com.example.emotion_storage.global.monitoring.DiscordErrorNotifier;
 import com.example.emotion_storage.global.security.principal.CustomUserPrincipal;
+import com.example.emotion_storage.support.controller.AuthenticatedControllerTest;
 import com.example.emotion_storage.user.auth.service.TokenService;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
@@ -31,13 +33,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AuthController.class)
 @Import(TestSecurityConfig.class)
-@ActiveProfiles("test")
-public class AuthControllerTest {
+public class AuthControllerTest extends AuthenticatedControllerTest {
 
     @Autowired private MockMvc mockMvc;
 
     @MockitoBean TokenService tokenService;
     @MockitoBean JpaMetamodelMappingContext jpaMetamodelMappingContext;
+    @MockitoBean DiscordErrorNotifier discordErrorNotifier;
 
     @Test
     void 쿠키에_리프레시_토큰이_존재하면_액세스_토큰을_재발급한다() throws Exception {
