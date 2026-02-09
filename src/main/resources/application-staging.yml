@@ -25,9 +25,8 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
-  spring:
-    flyway:
-      locations: classpath:db/migration,classpath:db/seed
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
 
 auth:
   refresh:
