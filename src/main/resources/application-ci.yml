@@ -22,7 +22,7 @@ spring:
   security:
     oauth2:
       google:
-        client-id: security-ouath2-google-client-id
+        client-ids: security-ouath2-google-client-id
 
 auth:
   refresh:
