@@ -18,3 +18,24 @@ spring:
     baseline-on-migrate: true
     baseline-version: 1
     baseline-description: baseline
+
+  security:
+    oauth2:
+      google:
+        client-id: security-ouath2-google-client-id
+
+auth:
+  refresh:
+    expiration-days: 365
+
+jwt:
+  secret: jwt-secret-fot-test-jwt-secret-for-test
+  access-token:
+    expiration-minutes: 365
+
+ai:
+  websocket:
+    url: ws://localhost:0
+    timeout: 30000
+  server:
+    base-url: http://localhost

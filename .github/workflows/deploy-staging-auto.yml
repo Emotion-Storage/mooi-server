@@ -63,7 +63,7 @@ jobs:
           exit 1
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test --stacktrace --info
 
   build_and_deploy:
     runs-on: ubuntu-latest
