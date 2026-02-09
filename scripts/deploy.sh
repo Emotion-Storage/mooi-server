@@ -53,12 +53,12 @@ chmod +x $JAR_NAME
 
 # 애플리케이션 실행
 log "> $JAR_NAME 실행 (spring.profiles.active=$SPRING_PROFILE)"
-nohup java -jar \
+nohup java \
     -Dspring.profiles.active=$SPRING_PROFILE \
     -Duser.timezone=Asia/Seoul \
     -Xms512m \
     -Xmx1024m \
-    $JAR_NAME >> $REPOSITORY/nohup.out 2>&1 &
+    -jar $JAR_NAME >> $REPOSITORY/nohup.out 2>&1 &
 
 for i in {1..9}; do
     NEW_PID=$(sudo lsof -t -i:$PORT 2>/dev/null || echo "")
