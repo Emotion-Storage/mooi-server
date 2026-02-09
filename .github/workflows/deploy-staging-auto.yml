@@ -64,12 +64,13 @@ jobs:
           exit 1
 
       - name: Run tests
-        run: ./gradlew test --stacktrace --info \
-          -Duser.timezone=Asia/Seoul \
-          -Dspring.profiles.active=test \
-          -Dlogging.level.org.hibernate.SQL=DEBUG \
-          -Dlogging.level.org.hibernate.orm.jdbc.bind=TRACE \
-          -Dlogging.level.org.springframework.transaction=TRACE
+        run: |
+          ./gradlew test --stacktrace --info \
+            -Duser.timezone=Asia/Seoul \
+            -Dspring.profiles.active=test \
+            -Dlogging.level.org.hibernate.SQL=DEBUG \
+            -Dlogging.level.org.hibernate.orm.jdbc.bind=TRACE \
+            -Dlogging.level.org.springframework.transaction=TRACE
 
       - name: Upload test reports
         if: always()
