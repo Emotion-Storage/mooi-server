@@ -33,6 +33,7 @@ jobs:
 
     env:
       SPRING_PROFILES_ACTIVE: ci
+      TZ: Asia/Seoul
       CI_DB_HOST: 127.0.0.1
       CI_DB_PORT: 3306
       CI_DB_NAME: ci_db
@@ -65,7 +66,7 @@ jobs:
           exit 1
 
       - name: Run tests
-        run: ./gradlew test --stacktrace --info
+        run: ./gradlew test --stacktrace --info -Duser.timezone=Asia/Seoul
 
   build:
     runs-on: ubuntu-latest
