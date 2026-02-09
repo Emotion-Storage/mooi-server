@@ -13,7 +13,9 @@ import com.example.emotion_storage.chat.service.ChatMessageStore;
 import com.example.emotion_storage.chat.service.ChatService;
 import com.example.emotion_storage.global.api.SuccessMessage;
 import com.example.emotion_storage.global.config.TestSecurityConfig;
+import com.example.emotion_storage.global.monitoring.DiscordErrorNotifier;
 import com.example.emotion_storage.home.service.HomeService;
+import com.example.emotion_storage.support.controller.AuthenticatedControllerTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(HomeController.class)
 @Import(TestSecurityConfig.class)
-public class HomeControllerTest {
+public class HomeControllerTest extends AuthenticatedControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
@@ -33,6 +35,7 @@ public class HomeControllerTest {
     @MockitoBean ChatMessageStore chatMessageStore;
     @MockitoBean HomeService homeService;
     @MockitoBean JpaMetamodelMappingContext jpaMetamodelMappingContext;
+    @MockitoBean private DiscordErrorNotifier discordErrorNotifier;
 
     @Test
     void 감정_대화_시작_시에_채팅방_ID를_반환한다() throws Exception {

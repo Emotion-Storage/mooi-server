@@ -11,6 +11,8 @@ import com.example.emotion_storage.chat.dto.response.ChatRoomTempSaveResponse;
 import com.example.emotion_storage.chat.service.ChatService;
 import com.example.emotion_storage.global.api.SuccessMessage;
 import com.example.emotion_storage.global.config.TestSecurityConfig;
+import com.example.emotion_storage.global.monitoring.DiscordErrorNotifier;
+import com.example.emotion_storage.support.controller.AuthenticatedControllerTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +25,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ChatController.class)
 @Import(TestSecurityConfig.class)
-public class ChatControllerTest {
+public class ChatControllerTest extends AuthenticatedControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
     @MockitoBean ChatService chatService;
     @MockitoBean JpaMetamodelMappingContext jpaMetamodelMappingContext;
+    @MockitoBean private DiscordErrorNotifier discordErrorNotifier;
 
     @Test
     void 채팅방_임시저장에_성공한다() throws Exception {
