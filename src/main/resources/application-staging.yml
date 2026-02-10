@@ -27,6 +27,7 @@ spring:
 
   flyway:
     locations: classpath:db/migration,classpath:db/seed
+    baseline-on-migrate: true
 
 auth:
   refresh:
