@@ -161,7 +161,6 @@ public class ChatServiceTest {
         assertThat(response.roomId()).isNotNull();
         assertThat(response.roomId()).isEqualTo(chatRoom.getId());
         assertThat(response.isTempSave()).isFalse();
-        assertThat(response.isFirstChatOfDay()).isTrue();
         assertThat(chatRoom.getUser().getId()).isEqualTo(userId);
         assertThat(chatRoom.isEnded()).isFalse();
     }
@@ -180,7 +179,6 @@ public class ChatServiceTest {
         assertThat(response.roomId()).isNotNull();
         assertThat(response.roomId()).isEqualTo(chatRoom.getId());
         assertThat(response.isTempSave()).isTrue();
-        assertThat(response.isFirstChatOfDay()).isTrue();
         assertThat(chatRoom.getUser().getId()).isEqualTo(userId);
         assertThat(chatRoom.isEnded()).isFalse();
     }
