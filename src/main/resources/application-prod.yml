@@ -27,7 +27,7 @@ spring:
 
   flyway:
     locations: classpath:db/migration
-
+#    baseline-on-migrate: false 1회 배포 후 변경 필요
 auth:
   refresh:
     expiration-days: ${REFRESH_TOKEN_EXPIRATION_DAYS}
