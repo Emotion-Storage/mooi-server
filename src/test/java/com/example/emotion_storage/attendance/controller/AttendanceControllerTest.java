@@ -15,6 +15,8 @@ import com.example.emotion_storage.global.api.SuccessMessage;
 import com.example.emotion_storage.global.config.TestSecurityConfig;
 import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
+import com.example.emotion_storage.global.monitoring.DiscordErrorNotifier;
+import com.example.emotion_storage.support.controller.AuthenticatedControllerTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -28,13 +30,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AttendanceController.class)
 @Import(TestSecurityConfig.class)
-public class AttendanceControllerTest {
+public class AttendanceControllerTest extends AuthenticatedControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
 
     @MockitoBean AttendanceService attendanceService;
     @MockitoBean JpaMetamodelMappingContext jpaMetamodelMappingContext;
+    @MockitoBean private DiscordErrorNotifier discordErrorNotifier;
 
     @Test
     void 출석_보상_현황_조회에_성공한다() throws Exception {

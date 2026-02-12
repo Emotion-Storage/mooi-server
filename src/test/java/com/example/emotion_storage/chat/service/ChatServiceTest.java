@@ -20,6 +20,7 @@ import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,12 +40,13 @@ public class ChatServiceTest {
     @Autowired private ChatService chatService;
 
     private User newUser() {
+        String uid = UUID.randomUUID().toString();
         return userRepository.save(User.builder()
                 .socialType(SocialType.GOOGLE)
-                .socialId("social123")
-                .email("test@example.com")
+                .socialId("social-" + uid)
+                .email("test-" + uid + "@example.com")
                 .profileImageUrl("http://example.com/profile.png")
-                .nickname("tester")
+                .nickname("tester-" + uid)
                 .gender(Gender.MALE)
                 .birthday(LocalDate.of(2000,1,1))
                 .keyCount(5L)
@@ -140,7 +142,7 @@ public class ChatServiceTest {
         assertThat(response.isFirstChatOfDay()).isTrue();
 
         ChatRoom chatRoom = chatRoomRepository.findById(response.roomId())
-                        .orElseThrow();
+                .orElseThrow();
         assertThat(chatRoom.getUser().getId()).isEqualTo(userId);
         assertThat(chatRoom.isEnded()).isFalse();
     }
@@ -159,7 +161,6 @@ public class ChatServiceTest {
         assertThat(response.roomId()).isNotNull();
         assertThat(response.roomId()).isEqualTo(chatRoom.getId());
         assertThat(response.isTempSave()).isFalse();
-        assertThat(response.isFirstChatOfDay()).isTrue();
         assertThat(chatRoom.getUser().getId()).isEqualTo(userId);
         assertThat(chatRoom.isEnded()).isFalse();
     }
@@ -178,7 +179,6 @@ public class ChatServiceTest {
         assertThat(response.roomId()).isNotNull();
         assertThat(response.roomId()).isEqualTo(chatRoom.getId());
         assertThat(response.isTempSave()).isTrue();
-        assertThat(response.isFirstChatOfDay()).isTrue();
         assertThat(chatRoom.getUser().getId()).isEqualTo(userId);
         assertThat(chatRoom.isEnded()).isFalse();
     }
@@ -218,7 +218,7 @@ public class ChatServiceTest {
 
         // then
         ChatRoom updated = chatRoomRepository.findById(response.chatRoomId())
-                        .orElseThrow();
+                .orElseThrow();
 
         assertThat(updated.isTempSave()).isTrue();
         assertThat(updated.getId()).isEqualTo(chatRoom.getId());

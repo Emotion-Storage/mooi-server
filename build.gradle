@@ -30,6 +30,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	// Database
 	runtimeOnly 'com.mysql:mysql-connector-j'
@@ -73,8 +74,13 @@ dependencies {
 	implementation 'org.java-websocket:Java-WebSocket:1.5.3'
 
 	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+	// flyway
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-mysql'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	systemProperty "user.timezone", "Asia/Seoul"
 }

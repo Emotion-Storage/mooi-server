@@ -12,6 +12,8 @@ import com.example.emotion_storage.global.api.SuccessMessage;
 import com.example.emotion_storage.global.config.TestSecurityConfig;
 import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
+import com.example.emotion_storage.global.monitoring.DiscordErrorNotifier;
+import com.example.emotion_storage.support.controller.AuthenticatedControllerTest;
 import com.example.emotion_storage.timecapsule.dto.EmotionDetailDto;
 import com.example.emotion_storage.global.dto.PaginationDto;
 import com.example.emotion_storage.timecapsule.dto.TimeCapsuleDto;
@@ -38,12 +40,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(TimeCapsuleController.class)
 @Import(TestSecurityConfig.class)
-class TimeCapsuleControllerTest {
+class TimeCapsuleControllerTest extends AuthenticatedControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
     @MockitoBean TimeCapsuleService timeCapsuleService;
     @MockitoBean JpaMetamodelMappingContext jpaMetamodelMappingContext;
+    @MockitoBean private DiscordErrorNotifier discordErrorNotifier;
 
     @Test
     void 타임캡슐이_존재하는_날짜_리스트를_반환한다() throws Exception {

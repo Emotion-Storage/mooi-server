@@ -25,6 +25,10 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
+    baseline-on-migrate: true
+
 auth:
   refresh:
     expiration-days: ${REFRESH_TOKEN_EXPIRATION_DAYS}
@@ -40,3 +44,8 @@ ai:
     timeout: 30000
   server:
     base-url: ${AI_SERVER_BASE_URL}
+
+monitoring:
+  discord:
+    enabled: true
+    error-webhook-url: ${DISCORD_ERROR_WEBHOOK_URL:}

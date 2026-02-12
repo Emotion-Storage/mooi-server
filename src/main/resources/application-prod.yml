@@ -25,6 +25,9 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
+  flyway:
+    locations: classpath:db/migration
+#    baseline-on-migrate: false 1회 배포 후 변경 필요
 auth:
   refresh:
     expiration-days: ${REFRESH_TOKEN_EXPIRATION_DAYS}
@@ -40,3 +43,8 @@ ai:
     timeout: 30000
   server:
     base-url: ${AI_SERVER_BASE_URL}
+
+monitoring:
+  discord:
+    enabled: false
+    error-webhook-url: ${DISCORD_ERROR_WEBHOOK_URL:}
