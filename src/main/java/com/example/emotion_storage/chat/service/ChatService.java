@@ -142,6 +142,10 @@ public class ChatService {
                 currentRoom.getUser().getId(), currentRoom.getCreatedAt(), currentRoom.getId(), PageRequest.of(0, 1)
         );
 
+        prevRooms = prevRooms.stream()
+                .filter(r -> !r.getId().equals(currentRoom.getId()))
+                .toList();
+
         if (prevRooms.isEmpty()) {
             log.info("이전 채팅방이 존재하지 않기 때문에 첫 대화방으로 판단합니다.");
             return true;
