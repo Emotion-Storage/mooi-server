@@ -64,4 +64,10 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
                 .stream()
                 .findFirst();
     }
+
+    @Query("SELECT DISTINCT r.historyDate from Report r "
+            + "WHERE r.user.id = :userId AND r.historyDate >= :start AND r.historyDate < :end "
+            + "ORDER BY r.historyDate")
+    List<LocalDate> findActiveDatesInRange(@Param("userId") Long userId, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
 }
