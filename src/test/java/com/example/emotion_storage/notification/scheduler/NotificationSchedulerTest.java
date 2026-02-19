@@ -10,6 +10,7 @@ import com.example.emotion_storage.user.domain.Gender;
 import com.example.emotion_storage.user.domain.SocialType;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,7 @@ class NotificationSchedulerTest {
     @Autowired private NotificationRepository notificationRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private TimeCapsuleRepository timeCapsuleRepository;
+    @Autowired private Clock clock;
 
     private Long userId;
 
@@ -55,35 +57,35 @@ class NotificationSchedulerTest {
         timeCapsuleRepository.save(TimeCapsule.builder()
                 .user(user)
                 .chatroomId(101L)
-                .historyDate(LocalDateTime.now().minusDays(1))
+                .historyDate(LocalDateTime.now(clock).minusDays(1))
                 .oneLineSummary("A")
                 .dialogueSummary("A")
                 .myMindNote("")
                 .isOpened(false)
                 .isTempSave(false)
                 .isFavorite(false)
-                .openedAt(LocalDateTime.now().minusMinutes(1))
+                .openedAt(LocalDateTime.now(clock).minusMinutes(1))
                 .build());
 
         // openedAt 미래라 대상 아님
         timeCapsuleRepository.save(TimeCapsule.builder()
                 .user(user)
                 .chatroomId(102L)
-                .historyDate(LocalDateTime.now().minusDays(1))
+                .historyDate(LocalDateTime.now(clock).minusDays(1))
                 .oneLineSummary("B")
                 .dialogueSummary("B")
                 .myMindNote("")
                 .isOpened(false)
                 .isTempSave(false)
                 .isFavorite(false)
-                .openedAt(LocalDateTime.now().plusMinutes(10))
+                .openedAt(LocalDateTime.now(clock).plusMinutes(10))
                 .build());
 
         // tempSave라 대상 아님
         timeCapsuleRepository.save(TimeCapsule.builder()
                 .user(user)
                 .chatroomId(103L)
-                .historyDate(LocalDateTime.now().minusDays(1))
+                .historyDate(LocalDateTime.now(clock).minusDays(1))
                 .oneLineSummary("C")
                 .dialogueSummary("C")
                 .myMindNote("")

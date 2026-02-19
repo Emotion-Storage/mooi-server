@@ -20,6 +20,7 @@ import com.example.emotion_storage.user.domain.Gender;
 import com.example.emotion_storage.user.domain.SocialType;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +47,9 @@ class TimeCapsuleServiceTest {
     @Autowired
     private ReportRepository reportRepository;
 
+    @Autowired
+    private Clock clock;
+
     private Long userId;
 
     @BeforeEach
@@ -71,7 +75,7 @@ class TimeCapsuleServiceTest {
 
         // 2. 리포트 생성
         Report report = Report.builder()
-                .historyDate(LocalDate.now())
+                .historyDate(LocalDate.now(clock))
                 .todaySummary("오늘 하루 요약")
                 .stressIndex(3)
                 .happinessIndex(7)
@@ -90,9 +94,9 @@ class TimeCapsuleServiceTest {
             int group = (i + 1) / 2;
             boolean isOne = i == 1;
 
-            LocalDateTime historyDate = LocalDateTime.now().minusDays(group);
-            LocalDateTime favoriteAt = LocalDateTime.now().minusHours(i);
-            LocalDateTime openAt = LocalDateTime.now().minusHours(i);
+            LocalDateTime historyDate = LocalDateTime.now(clock).minusDays(group);
+            LocalDateTime favoriteAt = LocalDateTime.now(clock).minusHours(i);
+            LocalDateTime openAt = LocalDateTime.now(clock).minusHours(i);
 
             TimeCapsule timeCapsule = TimeCapsule.builder()
                     .user(user)
@@ -116,7 +120,7 @@ class TimeCapsuleServiceTest {
     @Test
     void 타임캡슐이_존재하는_날짜_목록을_반환한다() {
         // given
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         int year = now.getYear();
         int month = now.getMonthValue();
         int day = now.getDayOfMonth();
@@ -140,7 +144,7 @@ class TimeCapsuleServiceTest {
     @Test
     void 특정_날짜의_타임캡슐_목록을_조회한다() {
         // given
-        LocalDate targetDate = LocalDate.now().minusDays(1);
+        LocalDate targetDate = LocalDate.now(clock).minusDays(1);
         int page = 1;
         int limit = 10;
 
@@ -164,8 +168,8 @@ class TimeCapsuleServiceTest {
     @Test
     void 도착한_날짜의_타임캡슐을_조회한다() {
         // given
-        LocalDate startDate = LocalDate.now().minusDays(21);
-        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = LocalDate.now(clock).minusDays(21);
+        LocalDate endDate = LocalDate.now(clock);
         int page = 1;
         int limit = 10;
 
@@ -306,7 +310,7 @@ class TimeCapsuleServiceTest {
                                 .user(userRepository.findById(userId).orElseThrow())
                                 .report(report)
                                 .chatroomId(9999L + System.nanoTime())
-                                .historyDate(LocalDateTime.now())
+                                .historyDate(LocalDateTime.now(clock))
                                 .oneLineSummary("상한 채우기")
                                 .dialogueSummary("상한 채우기")
                                 .myMindNote("상한 채우기")
@@ -325,7 +329,7 @@ class TimeCapsuleServiceTest {
                 .user(userRepository.findById(userId).orElseThrow())
                 .report(report)
                 .chatroomId(123456L)
-                .historyDate(LocalDateTime.now())
+                .historyDate(LocalDateTime.now(clock))
                 .oneLineSummary("상한 초과 대상")
                 .dialogueSummary("상한 초과 대상")
                 .myMindNote("상한 초과 대상")
@@ -370,7 +374,7 @@ class TimeCapsuleServiceTest {
     void 도착한_타임캡슐을_열림_상태로_전환한다() {
         // given
         TimeCapsule arrived = timeCapsuleRepository.findAll().stream()
-                .filter(timeCapsule -> timeCapsule.getOpenedAt() != null && timeCapsule.getOpenedAt().isBefore(LocalDateTime.now()))
+                .filter(timeCapsule -> timeCapsule.getOpenedAt() != null && timeCapsule.getOpenedAt().isBefore(LocalDateTime.now(clock)))
                 .findFirst()
                 .orElseThrow();
 
@@ -393,13 +397,13 @@ class TimeCapsuleServiceTest {
         User user = userRepository.findById(userId).orElseThrow();
         Report report = reportRepository.findAll().get(0);
 
-        LocalDateTime futureOpenAt = LocalDateTime.now().plusDays(8); // 8 ~ 30일 → 3개 소모 필요
+        LocalDateTime futureOpenAt = LocalDateTime.now(clock).plusDays(8); // 8 ~ 30일 → 3개 소모 필요
         TimeCapsule futureTimeCapsule = timeCapsuleRepository.save(
                 TimeCapsule.builder()
                         .user(user)
                         .report(report)
                         .chatroomId(7777L)
-                        .historyDate(LocalDateTime.now())
+                        .historyDate(LocalDateTime.now(clock))
                         .openedAt(futureOpenAt)
                         .oneLineSummary("미래 캡슐")
                         .dialogueSummary("미래 캡슐")

@@ -18,6 +18,7 @@ import com.example.emotion_storage.user.domain.Gender;
 import com.example.emotion_storage.user.domain.SocialType;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -38,6 +39,7 @@ public class ChatServiceTest {
     @Autowired private ChatRoomRepository chatRoomRepository;
     @Autowired private ChatRepository chatRepository;
     @Autowired private ChatService chatService;
+    @Autowired private Clock clock;
 
     private User newUser() {
         String uid = UUID.randomUUID().toString();
@@ -88,7 +90,7 @@ public class ChatServiceTest {
         ChatRoom chatRoom = ChatRoom.builder()
                 .user(user)
                 .isEnded(false)
-                .firstChatTime(LocalDateTime.now().minusSeconds(30))
+                .firstChatTime(LocalDateTime.now(clock).minusSeconds(30))
                 .isTempSave(true)
                 .build();
         user.addChatRoom(chatRoom);
@@ -100,7 +102,7 @@ public class ChatServiceTest {
                 .user(user)
                 .isEnded(true)
                 .isTempSave(false)
-                .firstChatTime(LocalDateTime.now().minusSeconds(30))
+                .firstChatTime(LocalDateTime.now(clock).minusSeconds(30))
                 .build();
         user.addChatRoom(chatRoom);
         return chatRoomRepository.save(chatRoom);
@@ -295,16 +297,16 @@ public class ChatServiceTest {
         // given
         User user = newUser();
 
-        ChatRoom older = createChatRoomWithFirstChatTime(user, LocalDateTime.now());
-        newChat(older, SenderType.USER, "안녕", LocalDateTime.now());
-        newChat(older, SenderType.MOOI, "오늘 기분은 어때?", LocalDateTime.now());
-        newChat(older, SenderType.USER, "오늘은 좋았어", LocalDateTime.now());
+        ChatRoom older = createChatRoomWithFirstChatTime(user, LocalDateTime.now(clock));
+        newChat(older, SenderType.USER, "안녕", LocalDateTime.now(clock));
+        newChat(older, SenderType.MOOI, "오늘 기분은 어때?", LocalDateTime.now(clock));
+        newChat(older, SenderType.USER, "오늘은 좋았어", LocalDateTime.now(clock));
         older.closeChatRoom();
 
-        ChatRoom newer = createChatRoomWithFirstChatTime(user, LocalDateTime.now());
-        newChat(newer, SenderType.USER, "안녕", LocalDateTime.now());
-        newChat(newer, SenderType.MOOI, "안녕, 오늘은 뭐했어?", LocalDateTime.now());
-        newChat(newer, SenderType.USER, "오늘은 공부했어", LocalDateTime.now());
+        ChatRoom newer = createChatRoomWithFirstChatTime(user, LocalDateTime.now(clock));
+        newChat(newer, SenderType.USER, "안녕", LocalDateTime.now(clock));
+        newChat(newer, SenderType.MOOI, "안녕, 오늘은 뭐했어?", LocalDateTime.now(clock));
+        newChat(newer, SenderType.USER, "오늘은 공부했어", LocalDateTime.now(clock));
         newer.closeChatRoom();
 
         // when
@@ -325,16 +327,16 @@ public class ChatServiceTest {
         // given
         User user = newUser();
 
-        ChatRoom older = createChatRoomWithFirstChatTime(user, LocalDateTime.now());
-        newChat(older, SenderType.USER, "안녕", LocalDateTime.now());
-        newChat(older, SenderType.MOOI, "오늘 기분은 어때?", LocalDateTime.now());
-        newChat(older, SenderType.USER, "오늘은 좋았어", LocalDateTime.now());
+        ChatRoom older = createChatRoomWithFirstChatTime(user, LocalDateTime.now(clock));
+        newChat(older, SenderType.USER, "안녕", LocalDateTime.now(clock));
+        newChat(older, SenderType.MOOI, "오늘 기분은 어때?", LocalDateTime.now(clock));
+        newChat(older, SenderType.USER, "오늘은 좋았어", LocalDateTime.now(clock));
         older.closeChatRoom();
 
-        ChatRoom newer = createChatRoomWithFirstChatTime(user, LocalDateTime.now());
-        newChat(newer, SenderType.USER, "안녕", LocalDateTime.now());
-        newChat(newer, SenderType.MOOI, "안녕, 오늘은 뭐했어?", LocalDateTime.now());
-        newChat(newer, SenderType.USER, "오늘은 공부했어", LocalDateTime.now());
+        ChatRoom newer = createChatRoomWithFirstChatTime(user, LocalDateTime.now(clock));
+        newChat(newer, SenderType.USER, "안녕", LocalDateTime.now(clock));
+        newChat(newer, SenderType.MOOI, "안녕, 오늘은 뭐했어?", LocalDateTime.now(clock));
+        newChat(newer, SenderType.USER, "오늘은 공부했어", LocalDateTime.now(clock));
         newer.closeChatRoom();
 
         // when
@@ -370,18 +372,18 @@ public class ChatServiceTest {
         User user = newUser();
         User other = otherUser();
 
-        ChatRoom older = createChatRoomWithFirstChatTime(user, LocalDateTime.now());
-        newChat(older, SenderType.USER, "안녕", LocalDateTime.now());
-        newChat(older, SenderType.MOOI, "오늘 기분은 어때?", LocalDateTime.now());
-        newChat(older, SenderType.USER, "오늘은 좋았어", LocalDateTime.now());
+        ChatRoom older = createChatRoomWithFirstChatTime(user, LocalDateTime.now(clock));
+        newChat(older, SenderType.USER, "안녕", LocalDateTime.now(clock));
+        newChat(older, SenderType.MOOI, "오늘 기분은 어때?", LocalDateTime.now(clock));
+        newChat(older, SenderType.USER, "오늘은 좋았어", LocalDateTime.now(clock));
         older.closeChatRoom();
 
-        ChatRoom otherChatRoom = createChatRoomWithFirstChatTime(other, LocalDateTime.now());
+        ChatRoom otherChatRoom = createChatRoomWithFirstChatTime(other, LocalDateTime.now(clock));
 
-        ChatRoom newer = createChatRoomWithFirstChatTime(user, LocalDateTime.now());
-        newChat(newer, SenderType.USER, "안녕", LocalDateTime.now());
-        newChat(newer, SenderType.MOOI, "안녕, 오늘은 뭐했어?", LocalDateTime.now());
-        newChat(newer, SenderType.USER, "오늘은 공부했어", LocalDateTime.now());
+        ChatRoom newer = createChatRoomWithFirstChatTime(user, LocalDateTime.now(clock));
+        newChat(newer, SenderType.USER, "안녕", LocalDateTime.now(clock));
+        newChat(newer, SenderType.MOOI, "안녕, 오늘은 뭐했어?", LocalDateTime.now(clock));
+        newChat(newer, SenderType.USER, "오늘은 공부했어", LocalDateTime.now(clock));
         newer.closeChatRoom();
 
         // when
