@@ -1,0 +1,2 @@
+ALTER TABLE reports
+    MODIFY COLUMN user_id BIGINT NOT NULL;
