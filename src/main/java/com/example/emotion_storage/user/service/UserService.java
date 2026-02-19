@@ -1,11 +1,14 @@
 package com.example.emotion_storage.user.service;
 
+import com.example.emotion_storage.user.auth.oauth.apple.AppleLoginClaims;
+import com.example.emotion_storage.user.auth.oauth.apple.AppleTokenVerifier;
 import com.example.emotion_storage.user.auth.oauth.google.GoogleLoginClaims;
 import com.example.emotion_storage.user.auth.oauth.google.GoogleSignUpClaims;
 import com.example.emotion_storage.user.auth.oauth.google.GoogleTokenVerifier;
 import com.example.emotion_storage.user.auth.oauth.kakao.KakaoUserInfoClient;
 import com.example.emotion_storage.user.auth.oauth.kakao.KakaoUserInfo;
 import com.example.emotion_storage.user.auth.service.TokenService;
+import com.example.emotion_storage.user.dto.request.AppleLoginRequest;
 import com.example.emotion_storage.user.dto.request.KakaoLoginRequest;
 import com.example.emotion_storage.user.dto.request.KakaoSignUpRequest;
 import com.example.emotion_storage.user.repository.UserRepository;
@@ -38,6 +41,7 @@ public class UserService {
     private final GoogleTokenVerifier googleTokenVerifier;
     private final KakaoUserInfoClient kakaoUserInfoClient;
     private final TokenService tokenService;
+    private final AppleTokenVerifier appleTokenVerifier;
 
     @Transactional(readOnly = true)
     public LoginResponse googleLogin(GoogleLoginRequest request, HttpServletResponse response) {
@@ -48,6 +52,9 @@ public class UserService {
 
         if (user.isKakaoType()) {
             throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_KAKAO);
+        }
+        if (user.isAppleType()) {
+            throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_APPLE);
         }
 
         String accessToken = issueTokens(user.getId(), response);
@@ -98,6 +105,9 @@ public class UserService {
         if (user.isGoogleType()) {
             throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_GOOGLE);
         }
+        if (user.isAppleType()) {
+            throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_APPLE);
+        }
 
         String accessToken = issueTokens(user.getId(), response);
         return new LoginResponse(accessToken);
@@ -135,6 +145,30 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public LoginResponse appleLogin(AppleLoginRequest request, HttpServletResponse response) {
+        AppleLoginClaims claims = appleTokenVerifier.verifyLoginToken(request.idToken());
+
+        User user = userRepository.findBySocialTypeAndSocialId(SocialType.APPLE, claims.subject())
+                .orElseThrow(() -> new BaseException(ErrorCode.NEED_SIGN_UP));
+
+        if (claims.email() != null) {
+            Optional<User> existingUser = userRepository.findByEmail(claims.email());
+            if (existingUser.isPresent()) {
+                User existing = existingUser.get();
+                if (existing.isGoogleType()) {
+                    throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_GOOGLE);
+                }
+                if (existing.isKakaoType()) {
+                    throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_KAKAO);
+                }
+            }
+        }
+
+        String accessToken = issueTokens(user.getId(), response);
+        return new LoginResponse(accessToken);
     }
 
     private void validateNickname(String nickname) {

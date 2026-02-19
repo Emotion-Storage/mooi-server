@@ -238,6 +238,10 @@ public class User extends BaseTimeEntity {
         return socialType.equals(SocialType.GOOGLE);
     }
 
+    public boolean isAppleType() {
+        return socialType.equals(SocialType.APPLE);
+    }
+
     public void updateAttendanceStatus(int attendanceStreak, LocalDate lastAttendanceRewardDate) {
         this.attendanceStreak = attendanceStreak;
         this.lastAttendanceRewardDate = lastAttendanceRewardDate;
