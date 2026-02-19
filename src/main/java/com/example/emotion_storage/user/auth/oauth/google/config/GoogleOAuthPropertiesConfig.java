@@ -1,4 +1,4 @@
-package com.example.emotion_storage.global.config.properties;
+package com.example.emotion_storage.user.auth.oauth.google.config;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

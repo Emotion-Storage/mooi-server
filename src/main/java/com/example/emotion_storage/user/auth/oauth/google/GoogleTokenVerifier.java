@@ -1,6 +1,6 @@
 package com.example.emotion_storage.user.auth.oauth.google;
 
-import com.example.emotion_storage.global.config.properties.GoogleOAuthProperties;
+import com.example.emotion_storage.user.auth.oauth.google.config.GoogleOAuthProperties;
 import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
