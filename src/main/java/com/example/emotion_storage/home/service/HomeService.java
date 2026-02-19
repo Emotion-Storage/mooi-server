@@ -14,6 +14,7 @@ import com.example.emotion_storage.report.repository.ReportRepository;
 import com.example.emotion_storage.timecapsule.repository.TimeCapsuleRepository;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class HomeService {
     private final TimeCapsuleRepository timeCapsuleRepository;
     private final ReportRepository reportRepository;
     private final NotificationRepository notificationRepository;
+    private final Clock clock;
 
     public HomeInfoResponse getHomeInfo(Long userId) {
         log.info("사용자 홈 정보 조회 요청 - userId: {}", userId);
@@ -105,7 +107,7 @@ public class HomeService {
         // 사용자 존재 여부 확인
         findUserById(userId);
 
-        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime end = LocalDateTime.now(clock);
         LocalDateTime start = end.minusWeeks(3);
 
         // 미확인 타임캡슐 개수 조회
