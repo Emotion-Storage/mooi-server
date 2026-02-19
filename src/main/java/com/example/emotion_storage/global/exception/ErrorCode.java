@@ -13,6 +13,7 @@ public enum ErrorCode {
     NEED_SIGN_UP(HttpStatus.BAD_REQUEST, "회원가입이 필요합니다."),
     ALREADY_REGISTERED_WITH_GOOGLE(HttpStatus.BAD_REQUEST, "해당 이메일은 구글로 가입된 계정입니다."),
     ALREADY_REGISTERED_WITH_KAKAO(HttpStatus.BAD_REQUEST, "해당 이메일은 카카오로 가입된 계정입니다."),
+    ALREADY_REGISTERED_WITH_APPLE(HttpStatus.BAD_REQUEST, "해당 계정은 Apple로 이미 가입되어 있습니다."),
     INVALID_ID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 ID TOKEN 입니다."),
     INVALID_KAKAO_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 카카오 Access Token 입니다."),
     ACCESS_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "만료된 Access Token 입니다."),
@@ -21,6 +22,14 @@ public enum ErrorCode {
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "Refresh Token이 존재하지 않습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 요청입니다."),
     INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "사용할 수 없는 닉네임입니다."),
+
+    APPLE_JWKS_FETCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Apple 공개키 조회에 실패했습니다."),
+    APPLE_PUBLIC_KEY_NOT_FOUND(HttpStatus.UNAUTHORIZED, "Apple 공개키를 찾을 수 없습니다."),
+    APPLE_PUBLIC_KEY_BUILD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Apple 공개키 생성에 실패했습니다."),
+    INVALID_APPLE_ID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 Apple ID Token 입니다."),
+    INVALID_APPLE_ID_TOKEN_SIGNATURE(HttpStatus.UNAUTHORIZED, "Apple ID Token 서명 검증에 실패했습니다."),
+    INVALID_APPLE_ID_TOKEN_CLAIMS(HttpStatus.UNAUTHORIZED, "Apple ID Token 정보가 올바르지 않습니다."),
+    APPLE_ID_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "Apple ID Token이 만료되었습니다."),
 
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
     CHAT_ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "채팅방에 접근할 수 없습니다."),
