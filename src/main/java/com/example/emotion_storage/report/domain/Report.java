@@ -2,6 +2,7 @@ package com.example.emotion_storage.report.domain;
 
 import com.example.emotion_storage.global.entity.BaseTimeEntity;
 import com.example.emotion_storage.timecapsule.domain.TimeCapsule;
+import com.example.emotion_storage.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,10 @@ public class Report extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "report_id")
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(nullable = false)
     private LocalDate historyDate;
