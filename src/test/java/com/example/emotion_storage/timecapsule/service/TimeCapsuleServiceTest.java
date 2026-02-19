@@ -75,6 +75,7 @@ class TimeCapsuleServiceTest {
 
         // 2. 리포트 생성
         Report report = Report.builder()
+                .user(user)
                 .historyDate(LocalDate.now(clock))
                 .todaySummary("오늘 하루 요약")
                 .stressIndex(3)
