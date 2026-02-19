@@ -19,6 +19,7 @@ import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -67,6 +68,7 @@ public class ChatService {
     private final ChatRepository chatRepository;
     private final WebSocketClientService webSocketClientService;
     private final ChatMessageStore chatMessageStore;
+    private final Clock clock;
 
     @Transactional
     public ChatRoomCreateResponse createChatRoom(Long userId) {
@@ -113,7 +115,7 @@ public class ChatService {
             return false;
         }
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         LocalDate roomDate = extractRoomDate(chatRoom);
 
         return roomDate.isEqual(today);
@@ -154,7 +156,7 @@ public class ChatService {
         ChatRoom prevRoom = prevRooms.get(0);
 
         log.info("이전 채팅방의 생성 시각 및 첫 채팅 시각을 판단합니다.");
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         boolean prevCreatedToday = prevRoom.getCreatedAt().toLocalDate().isEqual(today);
         boolean prevFirstChattedToday =
                 prevRoom.getFirstChatTime() != null && prevRoom.getFirstChatTime().toLocalDate().isEqual(today);
@@ -209,7 +211,7 @@ public class ChatService {
                 .sender(SenderType.MOOI)
                 .roomId(roomId)
                 .sessionId(sessionId)
-                .timestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                .timestamp(LocalDateTime.now(clock).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                 .messageType("chat.delta")
                 .build();
 
@@ -290,7 +292,7 @@ public class ChatService {
                             .sender(SenderType.MOOI)
                             .roomId(roomId)
                             .sessionId(sessionId)
-                            .timestamp(LocalDateTime.now().toString())
+                            .timestamp(LocalDateTime.now(clock).toString())
                             .messageType(MESSAGE_TYPE_ERROR)
                             .build();
 
@@ -352,7 +354,7 @@ public class ChatService {
             AiChatResponse response = new AiChatResponse(
                     INFO_MESSAGE_PROCESSING,
                     sessionId,
-                    LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                    LocalDateTime.now(clock).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
                     false
             );
 

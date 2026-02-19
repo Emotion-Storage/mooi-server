@@ -5,6 +5,7 @@ import com.example.emotion_storage.global.exception.ErrorCode;
 import com.example.emotion_storage.notification.service.NotificationService;
 import com.example.emotion_storage.timecapsule.domain.TimeCapsule;
 import com.example.emotion_storage.timecapsule.repository.TimeCapsuleRepository;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class NotificationScheduler {
 
     private final TimeCapsuleRepository timeCapsuleRepository;
     private final NotificationService notificationService;
+    private final Clock clock;
 
     /**
      * 타임캡슐 도착 알림 생성
@@ -33,7 +35,7 @@ public class NotificationScheduler {
     @Scheduled(cron = "0 * 6-23 * * ?", zone = "Asia/Seoul")
     @Transactional
     public void createTimeCapsuleArrivalNotifications() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         int page = 0;
 
         while (true) {

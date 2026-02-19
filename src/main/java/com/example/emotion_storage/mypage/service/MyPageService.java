@@ -13,6 +13,7 @@ import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.regex.Pattern;
@@ -30,6 +31,7 @@ public class MyPageService {
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
+    private final Clock clock;
 
     @Transactional(readOnly = true)
     public MyPageOverviewResponse getMyPageOverview(Long userId) {
@@ -70,7 +72,7 @@ public class MyPageService {
 
     private long calculateSignUpDuration(User user) {
         LocalDate signupDate = user.getCreatedAt().toLocalDate();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         return ChronoUnit.DAYS.between(signupDate, today) + 1; // 가입한 순간부터 1일로 계산
     }
 

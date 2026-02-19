@@ -5,6 +5,7 @@ import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AttendanceService {
 
     private final UserRepository userRepository;
+    private final Clock clock;
 
     @Transactional(readOnly = true)
     public AttendanceStreakStatusResponse getAttendanceRewardStatus(Long userId) {
         User user = findUserById(userId);
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         LocalDate lastAttendanceRewardDate = user.getLastAttendanceRewardDate();
         int attendanceStreak = user.getAttendanceStreak();
         log.info("사용자 {}의 연속 출석일을 조회합니다.", userId);
@@ -50,7 +52,7 @@ public class AttendanceService {
     public AttendanceStreakStatusResponse updateAttendanceRewardStatus(Long userId, LocalDate rewardDate) {
         User user = findUserById(userId);
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         LocalDate lastAttendanceRewardDate = user.getLastAttendanceRewardDate();
         int attendanceStreak = user.getAttendanceStreak();
 
