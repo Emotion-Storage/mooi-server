@@ -9,6 +9,7 @@ import com.example.emotion_storage.user.auth.oauth.kakao.KakaoUserInfoClient;
 import com.example.emotion_storage.user.auth.oauth.kakao.KakaoUserInfo;
 import com.example.emotion_storage.user.auth.service.TokenService;
 import com.example.emotion_storage.user.dto.request.AppleLoginRequest;
+import com.example.emotion_storage.user.dto.request.AppleSignUpRequest;
 import com.example.emotion_storage.user.dto.request.KakaoLoginRequest;
 import com.example.emotion_storage.user.dto.request.KakaoSignUpRequest;
 import com.example.emotion_storage.user.repository.UserRepository;
@@ -171,6 +172,49 @@ public class UserService {
         return new LoginResponse(accessToken);
     }
 
+    @Transactional
+    public void appleSignUp(AppleSignUpRequest request) {
+        AppleLoginClaims claims = appleTokenVerifier.verifyLoginToken(request.idToken());
+
+        validateNickname(request.nickname());
+
+        Optional<User> existingAppleUser = userRepository.findBySocialTypeAndSocialId(SocialType.APPLE, claims.subject());
+
+        if (existingAppleUser.isPresent()) {
+            throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_APPLE);
+        }
+
+        if (claims.email() != null && !claims.email().isBlank()) {
+            validateAlreadyRegisteredUser(claims.email());
+        }
+
+        User user = User.builder()
+                .email(claims.email())
+                .socialId(claims.subject())
+                .socialType(SocialType.APPLE)
+                .profileImageUrl(null)
+                .nickname(request.nickname())
+                .gender(request.gender())
+                .birthday(request.birthday())
+                .expectations(request.expectations())
+                .isTermsAgreed(request.isTermsAgreed())
+                .isPrivacyAgreed(request.isPrivacyAgreed())
+                .isMarketingAgreed(request.isMarketingAgreed())
+                .keyCount(5L)
+                .ticketCount(10L)
+                .appPushNotify(true)
+                .emotionReminderNotify(true)
+                .emotionReminderDays(Set.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+                        DayOfWeek.THURSDAY,DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY))
+                .emotionReminderTime(LocalTime.of(NOTIFICATION_DEFAULT_HOUR, NOTIFICATION_DEFAULT_MINUTE))
+                .timeCapsuleReportNotify(true)
+                .marketingInfoNotify(request.isMarketingAgreed())
+                .deletedAt(null)
+                .build();
+
+        userRepository.save(user);
+    }
+
     private void validateNickname(String nickname) {
         if (!Pattern.matches(NICKNAME_PATTERN, nickname)) {
             throw new BaseException(ErrorCode.INVALID_NICKNAME);
@@ -186,6 +230,9 @@ public class UserService {
             }
             if (user.isKakaoType()) {
                 throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_KAKAO);
+            }
+            if (user.isAppleType()) {
+                throw new BaseException(ErrorCode.ALREADY_REGISTERED_WITH_APPLE);
             }
         }
     }
