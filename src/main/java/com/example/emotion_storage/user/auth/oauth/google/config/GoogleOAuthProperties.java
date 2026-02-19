@@ -1,4 +1,4 @@
-package com.example.emotion_storage.global.config.properties;
+package com.example.emotion_storage.user.auth.oauth.google.config;
 
 import java.util.Arrays;
 import java.util.List;
