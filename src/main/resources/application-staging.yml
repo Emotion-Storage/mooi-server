@@ -49,3 +49,6 @@ monitoring:
   discord:
     enabled: true
     error-webhook-url: ${DISCORD_ERROR_WEBHOOK_URL:}
+
+apple:
+  audience: ${APPLE_BUNDLE_ID}
