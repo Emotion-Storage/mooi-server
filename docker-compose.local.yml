@@ -20,6 +20,24 @@ services:
     networks:
       - mooi-network
 
+  postgres:
+    image: postgres:16
+    container_name: mooi-postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mooi-network
+
   redis:
     image: redis:7.2
     container_name: mooi-redis
@@ -34,6 +52,7 @@ services:
 
 volumes:
   mysql_data:
+  postgres_data:
   redis_data:
 
 networks:
