@@ -1,5 +1,6 @@
 package com.example.emotion_storage.user.repository;
 
+import com.example.emotion_storage.user.domain.SocialType;
 import com.example.emotion_storage.user.domain.User;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findBySocialId(String socialId);
     Boolean existsByEmail(String email);
+    Optional<User> findBySocialTypeAndSocialId(SocialType socialType, String socialId);
     
     @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
     List<User> findAllActiveUsers();

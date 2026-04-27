@@ -54,6 +54,7 @@ public class TimeCapsuleRepositoryTest {
                 .build());
 
         report = reportRepository.save(Report.builder()
+                .user(user)
                 .historyDate(LocalDate.now())
                 .todaySummary("요약")
                 .stressIndex(30)

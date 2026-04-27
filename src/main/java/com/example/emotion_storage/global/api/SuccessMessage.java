@@ -62,6 +62,9 @@ public enum SuccessMessage {
 
     // Notification
     GET_NOTIFICATION_LIST_SUCCESS("알림 목록 조회 성공"),
+
+    // Calendar
+    GET_CALENDAR_DATES_SUCCESS("월별 타임캡슐 및 일일리포트 날짜 목록 조회 성공"),
     ;
 
     private final String message;

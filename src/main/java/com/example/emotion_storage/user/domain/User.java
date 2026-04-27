@@ -44,6 +44,10 @@ import org.hibernate.annotations.Where;
                 @UniqueConstraint(
                         name = "uk_users_email_deleted_at",
                         columnNames = {"email", "deleted_at"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_users_social_deleted_at",
+                        columnNames = {"social_type", "social_id", "deleted_at"}
                 )
         }
 )
@@ -67,7 +71,6 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private String socialId;
 
-    @Column(nullable = false)
     private String email;
 
     private String profileImageUrl;
@@ -236,6 +239,10 @@ public class User extends BaseTimeEntity {
 
     public boolean isGoogleType() {
         return socialType.equals(SocialType.GOOGLE);
+    }
+
+    public boolean isAppleType() {
+        return socialType.equals(SocialType.APPLE);
     }
 
     public void updateAttendanceStatus(int attendanceStreak, LocalDate lastAttendanceRewardDate) {

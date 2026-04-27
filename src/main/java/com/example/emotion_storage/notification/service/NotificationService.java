@@ -8,6 +8,7 @@ import com.example.emotion_storage.notification.dto.response.NotificationListRes
 import com.example.emotion_storage.notification.repository.NotificationRepository;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +29,11 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final Clock clock;
 
     @Transactional(readOnly = true)
     public NotificationListResponse fetchNotifications(int page, int limit, Long userId) {
-        LocalDateTime start = LocalDateTime.now().minusDays(RECENT_NOTIFICATION_DAYS);
+        LocalDateTime start = LocalDateTime.now(clock).minusDays(RECENT_NOTIFICATION_DAYS);
         Pageable pageable = pageDesc(page, limit);
 
         log.info("사용자 {}의 {}부터의 알림 목록을 조회합니다.", userId, start);
@@ -71,7 +73,7 @@ public class NotificationService {
                 .isRead(false)
                 .type(type)
                 .targetId(targetId)
-                .arrivedAt(LocalDateTime.now())
+                .arrivedAt(LocalDateTime.now(clock))
                 .build();
         notificationRepository.save(notification);
     }

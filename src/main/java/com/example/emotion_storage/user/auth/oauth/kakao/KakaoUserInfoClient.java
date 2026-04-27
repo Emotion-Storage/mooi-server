@@ -3,6 +3,7 @@ package com.example.emotion_storage.user.auth.oauth.kakao;
 import com.example.emotion_storage.global.exception.BaseException;
 import com.example.emotion_storage.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -15,11 +16,11 @@ public class KakaoUserInfoClient {
     private static final String KAKAO_USER_INFO_URI = "https://kapi.kakao.com/v2/user/me";
     private static final String BEARER_HEADER_FORMAT = "Bearer %s";
 
-    private final RestClient restClient;
+    private final RestClient kakaoRestClient;
 
     public KakaoUserInfo getKakaoUserInfo(String accessToken) {
         try {
-            KakaoUserInfo userInfo = restClient.get()
+            KakaoUserInfo userInfo = kakaoRestClient.get()
                     .uri(KAKAO_USER_INFO_URI)
                     .header(HttpHeaders.AUTHORIZATION, makeBearerFormat(accessToken))
                     .retrieve()

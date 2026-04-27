@@ -10,6 +10,7 @@ import com.example.emotion_storage.user.domain.Gender;
 import com.example.emotion_storage.user.domain.SocialType;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -27,6 +28,7 @@ public class AttendanceServiceTest {
 
     @Autowired private AttendanceService attendanceService;
     @Autowired private UserRepository userRepository;
+    @Autowired private Clock clock;
 
     private User newUser(Integer streak, LocalDate rewardDate) {
         return userRepository.save(
@@ -72,7 +74,7 @@ public class AttendanceServiceTest {
     @Test
     void 오늘_이미_보상을_받았다면_보상_여부가_true로_반환된다() {
         // given
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         User user = newUser(3, today);
 
         // when
@@ -87,7 +89,7 @@ public class AttendanceServiceTest {
     @Test
     void 어제_보상을_받았다면_오늘_보상을_받을_수_있다고_응답한다() {
         // given
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         User user = newUser(3, today.minusDays(1));
 
         // when
@@ -102,7 +104,7 @@ public class AttendanceServiceTest {
     @Test
     void 일정기간_보상을_받지_않았다면_새로운_출석으로_판단한다() {
         // given
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         User user = newUser(4, today.minusDays(5));
 
         // when
@@ -117,7 +119,7 @@ public class AttendanceServiceTest {
     @Test
     void 과거날짜로_요청하면_예외가_발생한다() {
         // given
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         User user = newUser(0, null);
 
         // when & then
@@ -131,7 +133,7 @@ public class AttendanceServiceTest {
     @Test
     void 첫_출석_보상은_streak가_1로_저장된다() {
         // given
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         User user = newUser(0, null);
 
         // when
@@ -150,7 +152,7 @@ public class AttendanceServiceTest {
     @Test
     void 오늘_이미_보상을_받았다면_예외가_발생한다() {
         // given
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         User user = newUser(2, today);
 
         // when & then
@@ -164,7 +166,7 @@ public class AttendanceServiceTest {
     @Test
     void 어제_보상을_받았다면_오늘_연속일수가_증가한다() {
         // given
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         int prev = 3;
         User user = newUser(prev, today.minusDays(1));
 
@@ -185,7 +187,7 @@ public class AttendanceServiceTest {
     @Test
     void 일정기간_보상을_받지_않은_상태에서_보상받으면_연속일수가_1로_설정된다() {
         // given
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         User user = newUser(5, today.minusDays(5));
 
         // when

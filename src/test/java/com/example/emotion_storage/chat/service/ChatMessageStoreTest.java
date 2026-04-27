@@ -16,6 +16,7 @@ import com.example.emotion_storage.user.domain.Gender;
 import com.example.emotion_storage.user.domain.SocialType;
 import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +36,7 @@ public class ChatMessageStoreTest {
     @Autowired private ChatRoomRepository chatRoomRepository;
     @Autowired private ChatRepository chatRepository;
     @Autowired private ChatMessageStore chatMessageStore;
+    @Autowired private Clock clock;
 
     private User newUser() {
         return userRepository.save(User.builder()
@@ -70,7 +72,7 @@ public class ChatMessageStoreTest {
         ChatRoom chatRoom = newChatRoom(user);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         String timestamp = formatter.format(now);
 
         UserMessageDto userMessageDto = new UserMessageDto(
@@ -103,8 +105,8 @@ public class ChatMessageStoreTest {
         ChatRoom chatRoom = newChatRoom(user);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        LocalDateTime firstTime = LocalDateTime.now().minusMinutes(1);
-        LocalDateTime secondTime = LocalDateTime.now();
+        LocalDateTime firstTime = LocalDateTime.now(clock).minusMinutes(1);
+        LocalDateTime secondTime = LocalDateTime.now(clock);
         String firstTimestamp = formatter.format(firstTime);
         String secondTimestamp = formatter.format(secondTime);
 
@@ -147,7 +149,7 @@ public class ChatMessageStoreTest {
         // given
         User user = newUser();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         String timestamp = formatter.format(now);
 
         UserMessageDto userMessageDto = new UserMessageDto(

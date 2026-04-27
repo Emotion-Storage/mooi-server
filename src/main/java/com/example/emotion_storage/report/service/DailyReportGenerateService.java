@@ -259,6 +259,7 @@ public class DailyReportGenerateService {
         
         // Report 생성
         Report report = Report.builder()
+                .user(user)
                 .historyDate(historyDate)
                 .todaySummary(todaySummary)
                 .stressIndex(aiResponse.getStressLevel())

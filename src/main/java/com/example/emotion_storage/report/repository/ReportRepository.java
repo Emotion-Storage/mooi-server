@@ -14,21 +14,18 @@ import java.util.Optional;
 @Repository
 public interface ReportRepository extends JpaRepository<Report, Long> {
     
-    @Query("SELECT COUNT(DISTINCT r) FROM Report r " +
-           "JOIN r.timeCapsules tc " +
-           "WHERE tc.user.id = :userId AND r.isOpened = false")
+    @Query("SELECT COUNT(r) FROM Report r " +
+           "WHERE r.user.id = :userId AND r.isOpened = false")
     Long countUnopenedReportsByUserId(@Param("userId") Long userId);
     
-    @Query("SELECT DISTINCT r FROM Report r " +
-           "JOIN r.timeCapsules tc " +
-           "WHERE tc.user.id = :userId AND r.historyDate = :historyDate")
+    @Query("SELECT r FROM Report r " +
+           "WHERE r.user.id = :userId AND r.historyDate = :historyDate")
     Optional<Report> findByUserIdAndHistoryDate(@Param("userId") Long userId, @Param("historyDate") LocalDate historyDate);
 
     @Query("""
-        select distinct r.id
+        select r.id
         from Report r
-        join r.timeCapsules tc
-        where tc.user.id = :userId
+        where r.user.id = :userId
         order by r.historyDate desc
     """)
     List<Long> findLatestReportIdsByUserId(@Param("userId") Long userId, Pageable pageable);
@@ -38,10 +35,9 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     }
 
     @Query("""
-        select distinct r.id
+        select r.id
         from Report r
-        join r.timeCapsules tc
-        where tc.user.id = :userId
+        where r.user.id = :userId
           and r.isOpened = false
         order by r.historyDate desc
     """)
@@ -55,8 +51,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @Query("""
         select r
         from Report r
-        join r.timeCapsules tc
-        where tc.user.id = :userId
+        where r.user.id = :userId
         order by r.historyDate desc
     """)
     List<Report> findLatestReportsByUserId(
@@ -69,4 +64,10 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
                 .stream()
                 .findFirst();
     }
+
+    @Query("SELECT DISTINCT r.historyDate from Report r "
+            + "WHERE r.user.id = :userId AND r.historyDate >= :start AND r.historyDate < :end "
+            + "ORDER BY r.historyDate")
+    List<LocalDate> findActiveDatesInRange(@Param("userId") Long userId, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
 }

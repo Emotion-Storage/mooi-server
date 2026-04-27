@@ -78,6 +78,9 @@ dependencies {
 	// flyway
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.flywaydb:flyway-mysql'
+
+	// Apple ID Token 검증
+	implementation 'com.nimbusds:nimbus-jose-jwt:10.0.2'
 }
 
 tasks.named('test') {

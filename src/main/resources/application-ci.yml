@@ -22,7 +22,10 @@ spring:
   security:
     oauth2:
       google:
-        client-ids: security-ouath2-google-client-id
+        client-ids: security-oauth2-google-client-id
+
+apple:
+  audience: com.example.test.bundleid
 
 auth:
   refresh:

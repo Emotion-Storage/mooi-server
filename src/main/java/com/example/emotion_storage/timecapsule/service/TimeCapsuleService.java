@@ -34,6 +34,7 @@ import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.Date;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -85,6 +86,7 @@ public class TimeCapsuleService {
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final Clock clock;
 
     @Value("${ai.server.base-url:http://localhost:8000}")
     private String aiServerBaseUrl;
@@ -230,7 +232,7 @@ public class TimeCapsuleService {
                 .orElseThrow(() -> new BaseException(ErrorCode.TIME_CAPSULE_NOT_FOUND));
 
         // 첫 채팅 시각 + 24시간이 지나면 저장 불가
-        if (LocalDateTime.now().isAfter(timeCapsule.getHistoryDate().plusDays(1))) {
+        if (LocalDateTime.now(clock).isAfter(timeCapsule.getHistoryDate().plusDays(1))) {
             throw new BaseException(ErrorCode.TIME_CAPSULE_DRAFT_EXPIRED);
         }
         if (!timeCapsule.getIsTempSave()) {
@@ -282,7 +284,7 @@ public class TimeCapsuleService {
         if (ARRIVED_STATUS.equals(status)) {
             log.info("사용자 {}의 {}-{}의 도착한 타임캡슐 목록을 조회합니다.", userId, startDate, endDate);
             pageable = pageDesc(page, limit, SORT_BY_ARRIVED_TIME);
-            LocalDateTime end = LocalDateTime.now();
+            LocalDateTime end = LocalDateTime.now(clock);
             return fetchArrivedTimeCapsules(start, end, page, limit, userId, pageable);
         } else {
             log.info("사용자 {}의 {}-{}의 타임캡슐 목록을 조회합니다.", userId, startDate, endDate);
@@ -406,7 +408,7 @@ public class TimeCapsuleService {
     private long calculateDaysToOpen(LocalDateTime openDate) {
         log.info("타임캡슐을 열 때까지 필요한 날을 계산합니다.");
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
 
         if (now.isAfter(openDate)) {
             return 0;
@@ -436,7 +438,7 @@ public class TimeCapsuleService {
         TimeCapsule timeCapsule = findOwnedTimeCapsule(timeCapsuleId, userId);
 
         log.info("타임캡슐 {}를 삭제합니다.", timeCapsuleId);
-        timeCapsule.setDeletedAt(LocalDateTime.now());
+        timeCapsule.setDeletedAt(LocalDateTime.now(clock));
     }
 
     /**
@@ -464,7 +466,7 @@ public class TimeCapsuleService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
-        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime end = LocalDateTime.now(clock);
         LocalDateTime start = end.minusWeeks(3);
 
         log.info("사용자 {}의 미확인 타임캡슐 개수를 조회합니다.", user.getId());
