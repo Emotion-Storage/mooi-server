@@ -1,0 +1,49 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/${POSTGRES_DB}?sslmode=disable}
+    username: ${DB_USERNAME:${POSTGRES_USER}}
+    password: ${DB_PASSWORD:${POSTGRES_PASSWORD}}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  security:
+    oauth2:
+      google:
+        client-ids: ${GOOGLE_CLIENT_IDS}
+
+  data:
+    redis:
+      host: localhost
+      port: ${REDIS_PORT}
+
+  flyway:
+    locations: classpath:db/migration
+
+auth:
+  refresh:
+    expiration-days: ${REFRESH_TOKEN_EXPIRATION_DAYS}
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token:
+    expiration-minutes: ${ACCESS_TOKEN_EXPIRATION_MINUTES}
+
+ai:
+  websocket:
+    url: ${AI_WEBSOCKET_URL:ws://localhost:8000/ws/chat}
+    timeout: 30000
+  server:
+    base-url: ${AI_SERVER_BASE_URL:http://localhost:8000}
+
+monitoring:
+  discord:
+    enabled: false
+    error-webhook-url: ${DISCORD_ERROR_WEBHOOK_URL:}

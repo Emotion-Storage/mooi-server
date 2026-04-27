@@ -34,6 +34,7 @@ dependencies {
 
 	// Database
 	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'org.postgresql:postgresql'
 
 	// Environment
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
@@ -78,6 +79,7 @@ dependencies {
 	// flyway
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.flywaydb:flyway-mysql'
+	implementation 'org.flywaydb:flyway-database-postgresql'
 
 	// Apple ID Token 검증
 	implementation 'com.nimbusds:nimbus-jose-jwt:10.0.2'
