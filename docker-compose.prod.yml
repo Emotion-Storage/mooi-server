@@ -1,0 +1,50 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mooi-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DRIVER_CLASS_NAME: ${DB_DRIVER_CLASS_NAME:-org.postgresql.Driver}
+      HIBERNATE_DIALECT: ${HIBERNATE_DIALECT:-org.hibernate.dialect.PostgreSQLDialect}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_EXPIRATION_MINUTES: ${ACCESS_TOKEN_EXPIRATION_MINUTES}
+      REFRESH_TOKEN_EXPIRATION_DAYS: ${REFRESH_TOKEN_EXPIRATION_DAYS}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS}
+      APPLE_BUNDLE_ID: ${APPLE_BUNDLE_ID}
+      AI_SERVER_BASE_URL: ${AI_SERVER_BASE_URL:-http://host.docker.internal:8000}
+      AI_WEBSOCKET_URL: ${AI_WEBSOCKET_URL:-ws://host.docker.internal:8000/ws/chat}
+      DISCORD_ERROR_WEBHOOK_URL: ${DISCORD_ERROR_WEBHOOK_URL:-}
+    depends_on:
+      - redis
+    networks:
+      - mooi-network
+
+  redis:
+    image: redis:7.2
+    container_name: mooi-redis
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - mooi-network
+
+volumes:
+  redis_data:
+
+networks:
+  mooi-network:
+    driver: bridge

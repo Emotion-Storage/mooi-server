@@ -37,18 +37,19 @@
 
 ### 목표 구조 (`to-be`)
 
-- VPS 1대에서 `backend + ai-server + reverse proxy` 운영
+- VPS 1대에서 `backend + redis` 운영
+- AI 서버는 같은 VPS에서 수동 실행
 - 주 데이터베이스는 `Neon Postgres`
 - 1차 마이그레이션에서는 Redis 유지
 - 배포 흐름은 `prod`만 유지
 - 배포 방식은 `Docker Compose` 또는 `SSH 기반`으로 단순화
+- 초기 운영은 도메인 없이 `서버 공인 IP:8080`으로 직접 접근
 
 권장 서비스 구성:
 
-- `reverse-proxy`
 - `backend`
-- `ai-server`
 - `redis`
+- `ai-server`(수동 실행)
 
 권장 환경 변수 예시:
 
@@ -59,8 +60,8 @@ DB_USERNAME=<neon-user>
 DB_PASSWORD=<neon-password>
 DB_DRIVER_CLASS_NAME=org.postgresql.Driver
 HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
-AI_SERVER_BASE_URL=http://ai-server:8000
-AI_WEBSOCKET_URL=ws://ai-server:8000/ws/chat
+AI_SERVER_BASE_URL=http://host.docker.internal:8000
+AI_WEBSOCKET_URL=ws://host.docker.internal:8000/ws/chat
 ```
 
 ## 마이그레이션 단계
@@ -82,8 +83,31 @@ AI_WEBSOCKET_URL=ws://ai-server:8000/ws/chat
 
 - 저가 VPS 1대 준비
 - Docker 및 Docker Compose 설치
-- `backend`, `ai-server`, `redis`, `reverse-proxy` 구동
+- `backend`, `redis`, `reverse-proxy` 구동
+- AI 서버는 같은 VPS에서 별도 프로세스로 수동 실행
 - 백엔드가 Neon에 SSL로 연결되도록 설정
+
+운영용 초안 파일:
+
+- `docker-compose.prod.yml`
+- `deploy/.env.prod.example`
+
+예상 실행 방식:
+
+```bash
+cp deploy/.env.prod.example deploy/.env.prod
+docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d --build
+```
+
+`deploy/.env.prod`에서 꼭 채워야 하는 값:
+
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `AI_SERVER_BASE_URL`
+- `AI_WEBSOCKET_URL`
+
+운영 기본안에서는 AI 서버를 Docker Compose에 포함하지 않고, VPS 안에서 수동 실행합니다.
 
 ### 4단계. 데이터 이전
 
@@ -95,8 +119,10 @@ AI_WEBSOCKET_URL=ws://ai-server:8000/ws/chat
 ### 5단계. 트래픽 전환
 
 - VPS 기준 운영 스택 배포
+- AI 서버 수동 실행 후 내부 포트 확인
 - 로그인, 토큰 재발급, AI 호출, 리포트 생성, WebSocket 흐름 검증
-- DNS 전환
+- 초기에는 `http://서버공인IP:8080`으로 직접 검증
+- 도메인이 생기면 그때 리버스 프록시와 HTTPS 추가
 - 짧은 롤백 기간 동안 AWS 자원은 즉시 삭제하지 않고 유지
 
 ## 리스크 체크리스트
