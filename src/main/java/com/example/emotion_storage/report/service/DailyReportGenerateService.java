@@ -62,23 +62,23 @@ public class DailyReportGenerateService {
         log.info("일일 리포트 생성 스케줄러 시작 - 대상 날짜: {}", yesterday);
         
         try {
-            List<User> activeUsers = userRepository.findAllActiveUsers();
-            log.info("활성 사용자 수: {}", activeUsers.size());
+            List<Long> activeUserIds = userRepository.findAllActiveUserIdsWithValidGender();
+            log.info("리포트 생성 대상 사용자 수(유효 성별): {}", activeUserIds.size());
             
             int successCount = 0;
             int skipCount = 0;
             int errorCount = 0;
             
-            for (User user : activeUsers) {
+            for (Long userId : activeUserIds) {
                 try {
-                    boolean generated = generateDailyReportForUser(user, yesterday);
+                    boolean generated = generateDailyReportForUser(userId, yesterday);
                     if (generated) {
                         successCount++;
                     } else {
                         skipCount++;
                     }
                 } catch (Exception e) {
-                    log.error("사용자 ID {}의 일일 리포트 생성 중 오류 발생", user.getId(), e);
+                    log.error("사용자 ID {}의 일일 리포트 생성 중 오류 발생", userId, e);
                     errorCount++;
                 }
             }
@@ -95,13 +95,13 @@ public class DailyReportGenerateService {
      * 특정 사용자에 대해 전날 타임캡슐을 종합하여 일일 리포트 생성
      */
     @Transactional
-    public boolean generateDailyReportForUser(User user, LocalDate targetDate) {
-        log.info("일일 리포트 생성 시작 - userId: {}, date: {}", user.getId(), targetDate);
+    public boolean generateDailyReportForUser(Long userId, LocalDate targetDate) {
+        log.info("일일 리포트 생성 시작 - userId: {}, date: {}", userId, targetDate);
         
         // 이미 리포트가 존재하는지 확인
-        boolean reportExists = reportRepository.findByUserIdAndHistoryDate(user.getId(), targetDate).isPresent();
+        boolean reportExists = reportRepository.findByUserIdAndHistoryDate(userId, targetDate).isPresent();
         if (reportExists) {
-            log.info("이미 존재하는 리포트 - userId: {}, date: {}", user.getId(), targetDate);
+            log.info("이미 존재하는 리포트 - userId: {}, date: {}", userId, targetDate);
             return false;
         }
         
@@ -109,17 +109,17 @@ public class DailyReportGenerateService {
         LocalDateTime startOfDay = targetDate.atStartOfDay();
         LocalDateTime startOfNextDay = targetDate.plusDays(1).atStartOfDay();
         List<TimeCapsule> timeCapsules = timeCapsuleRepository.findByUserIdAndHistoryDate(
-                user.getId(),
+                userId,
                 startOfDay,
                 startOfNextDay
         );
         
         if (timeCapsules.isEmpty()) {
-            log.info("타임캡슐이 없어 리포트 생성 스킵 - userId: {}, date: {}", user.getId(), targetDate);
+            log.info("타임캡슐이 없어 리포트 생성 스킵 - userId: {}, date: {}", userId, targetDate);
             return false;
         }
         
-        log.info("타임캡슐 발견 - userId: {}, date: {}, count: {}", user.getId(), targetDate, timeCapsules.size());
+        log.info("타임캡슐 발견 - userId: {}, date: {}, count: {}", userId, targetDate, timeCapsules.size());
         
         // 타임캡슐 정보를 문자열로 변환
         String referenceMessage = buildReferenceMessage(timeCapsules);
@@ -128,14 +128,15 @@ public class DailyReportGenerateService {
         DailyReportGenerateResponse aiResponse = callAiServer(referenceMessage);
         
         // AI 응답을 Report 엔티티로 변환하여 저장
-        Report report = convertToReport(user, targetDate, timeCapsules, aiResponse);
+        User reportOwner = userRepository.getReferenceById(userId);
+        Report report = convertToReport(reportOwner, targetDate, timeCapsules, aiResponse);
         reportRepository.save(report);
 
         // 알림 저장
-        notificationService.createDailyReportArrival(user.getId(), report.getId());
+        notificationService.createDailyReportArrival(userId, report.getId());
         
         log.info("일일 리포트 생성 완료 - userId: {}, date: {}, reportId: {}", 
-                user.getId(), targetDate, report.getId());
+                userId, targetDate, report.getId());
         
         return true;
     }
@@ -338,4 +339,3 @@ public class DailyReportGenerateService {
         }
     }
 }
-
