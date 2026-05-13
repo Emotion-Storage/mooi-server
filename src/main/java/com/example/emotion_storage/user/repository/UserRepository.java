@@ -21,6 +21,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
     List<User> findAllActiveUsers();
 
+    @Query(
+            value = "SELECT user_id FROM users WHERE deleted_at IS NULL AND gender IN ('MALE', 'FEMALE')",
+            nativeQuery = true
+    )
+    List<Long> findAllActiveUserIdsWithValidGender();
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE User u SET u.ticketCount = :ticketCount WHERE u.deletedAt IS NULL")
     int resetTicketCountForAllActiveUsers(@Param("ticketCount") Long ticketCount);
