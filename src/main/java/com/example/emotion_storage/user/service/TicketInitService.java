@@ -1,10 +1,8 @@
 package com.example.emotion_storage.user.service;
 
-import com.example.emotion_storage.user.domain.User;
 import com.example.emotion_storage.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,18 +25,8 @@ public class TicketInitService {
         log.info("티켓 초기화 스케줄러 시작 - 시간: {}", LocalDateTime.now(ZoneId.of("Asia/Seoul")));
         
         try {
-            List<User> activeUsers = userRepository.findAllActiveUsers();
-            log.info("활성 사용자 수: {}", activeUsers.size());
-            
-            int initCount = 0;
-            for (User user : activeUsers) {
-                user.initTicketCount();
-                initCount++;
-            }
-            
-            userRepository.saveAll(activeUsers);
-            
-            log.info("티켓 초기화 완료 - 처리된 사용자 수: {}", initCount);
+            int updatedCount = userRepository.resetTicketCountForAllActiveUsers(10L);
+            log.info("티켓 초기화 완료 - 처리된 사용자 수: {}", updatedCount);
             
         } catch (Exception e) {
             log.error("티켓 초기화 중 오류 발생", e);
